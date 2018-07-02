@@ -1,8 +1,9 @@
 import * as React from "react";
 import * as _ from "lodash";
-import Table from "../components/Table";
+import Table, { TableOptions } from "../components/Table";
 import axios, { AxiosPromise, AxiosRequestConfig } from "axios";
 import { User } from "./model/user";
+import { Sort } from "../components/Table/model/Sort";
 
 declare const openDatabase: (
   db: string,
@@ -28,18 +29,18 @@ export default class TableExample extends React.Component<{}, State> {
   }
 
   public render() {
-    const tableOptions = {
+    const tableOptions: TableOptions = {
       rowHeight: 30,
       columnDefs: [
         {
           field: "id",
           width: 100,
+          enableSorting: true,
         },
         {
           field: "name",
           displayName: "名字",
           headerTemplate: <div>名字 (自定义)</div>,
-          cellClass: "",
           minWidth: 200,
           cellTemplate: (item: any) => (
             <span
@@ -82,8 +83,8 @@ export default class TableExample extends React.Component<{}, State> {
 
     return (
       <div>
-        <div style={{ height: "320px" }}>
-          <Table options={tableOptions} />
+        <div style={{ height: "500px" }}>
+          <Table options={tableOptions} sortChanged={this.handleSortChanged} />
         </div>
         <button onClick={this.fillLocalDb}>fill local db</button>
         <button onClick={this.getData}>get data from WebSQL</button>
@@ -124,9 +125,7 @@ export default class TableExample extends React.Component<{}, State> {
         "CREATE TABLE IF NOT EXISTS faker (id UNIQUE, avatar, county, email, title, firstName, lastName, street, zipCode, date, bs, catchPhrase, companyName, words, sentence)",
       );
 
-      tx.executeSql(
-        "DELETE FROM faker"
-      )
+      tx.executeSql("DELETE FROM faker");
 
       for (let i = 0; i < users.length; i++) {
         const item = users[i];
@@ -173,4 +172,8 @@ export default class TableExample extends React.Component<{}, State> {
     const url = `https://raw.githubusercontent.com/wz2cool/fake-data/master/users/users_${part}.json`;
     return axios.get(url);
   }
+
+  private handleSortChanged = (sorts: Sort[]) => {
+    console.log(sorts);
+  };
 }

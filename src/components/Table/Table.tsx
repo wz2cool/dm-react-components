@@ -1,5 +1,7 @@
 import * as React from "react";
 import "./style.less";
+import { Sort } from "./model/Sort";
+import { Direction } from "./model/direction";
 
 interface ColumnDef {
   field: string;
@@ -9,14 +11,18 @@ interface ColumnDef {
   cellTemplate?: any;
   width?: number;
   minWidth?: number;
+  enableSorting?: boolean;
+}
+
+export interface TableOptions {
+  rowHeight: number;
+  columnDefs: ColumnDef[];
+  data: any[];
 }
 
 export interface TableProps {
-  options: {
-    rowHeight: number;
-    columnDefs: ColumnDef[];
-    data: any[];
-  };
+  options: TableOptions;
+  sortChanged?: (sorts: Sort[]) => void;
 }
 
 interface TableState {
@@ -50,6 +56,7 @@ export default class Table extends React.Component<TableProps, TableState> {
   private delayNewSourceTimer: any;
   private updateTimestamp = 0;
   private forceUpdateInterval = 100; // ms
+  private readonly sorts: Sort[] = [];
 
   constructor(props: TableProps) {
     super(props);
@@ -99,6 +106,7 @@ export default class Table extends React.Component<TableProps, TableState> {
                 <div
                   className="rc-table-cell rc-table-cell-header"
                   style={{ height: rowHeight }}
+                  onClick={() => this.handleClickHeader(column)}
                 >
                   {column.headerTemplate ? (
                     column.headerTemplate
@@ -164,6 +172,32 @@ export default class Table extends React.Component<TableProps, TableState> {
       </div>
     );
   }
+
+  private handleClickHeader = (columnDef: ColumnDef) => {
+    if (columnDef.enableSorting !== true || !this.props.sortChanged) {
+      return;
+    }
+
+    const matchedSort = this.getMatchedSort(this.sorts, columnDef.field);
+    if (matchedSort) {
+      if (matchedSort.direction === Direction.ASC) {
+        // ASC -> DESC
+        matchedSort.direction = Direction.DESC;
+      } else {
+        // DESC -> remove sort
+        var index = this.sorts.indexOf(matchedSort);
+        if (index > -1) {
+          this.sorts.splice(index, 1);
+        }
+      }
+    } else {
+      const newSort = new Sort();
+      newSort.field = columnDef.field;
+      newSort.direction = Direction.ASC;
+      this.sorts.push(newSort);
+    }
+    this.props.sortChanged(this.sorts);
+  };
 
   private handleWheel = (e: any) => {
     const { options } = this.props;
@@ -242,4 +276,13 @@ export default class Table extends React.Component<TableProps, TableState> {
       }, timeout);
     }
   };
+
+  private getMatchedSort(sorts: Sort[], field: string): Sort | null {
+    for (const sort of sorts) {
+      if (sort.field === field) {
+        return sort;
+      }
+    }
+    return null;
+  }
 }
