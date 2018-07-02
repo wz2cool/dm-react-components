@@ -12,7 +12,7 @@ declare const openDatabase: (
   cb?: any,
 ) => any;
 
-const db = openDatabase("dmdb", "1.0", "Test DB", 10 * 1024 * 1024);
+const db = openDatabase("dmdb", "1.0", "Test DB", 100 * 1024 * 1024);
 
 interface State {
   data: any[];
@@ -52,6 +52,7 @@ export default class TableExample extends React.Component<{}, State> {
                 display: "inline-block",
               }}
               onClick={e => {
+                alert(item.firstName + " " + item.lastName);
                 // prevent row active
                 e.stopPropagation();
               }}
@@ -92,7 +93,6 @@ export default class TableExample extends React.Component<{}, State> {
   }
 
   private getData = () => {
-    console.log(new Date().toJSON());
     const _that = this;
     db.transaction((tx: any) => {
       tx.executeSql(
@@ -103,7 +103,6 @@ export default class TableExample extends React.Component<{}, State> {
           _that.setState({
             data,
           });
-          console.log(new Date().toJSON());
         },
       );
     });
@@ -124,9 +123,7 @@ export default class TableExample extends React.Component<{}, State> {
         "CREATE TABLE IF NOT EXISTS faker (id UNIQUE, avatar, county, email, title, firstName, lastName, street, zipCode, date, bs, catchPhrase, companyName, words, sentence)",
       );
 
-      tx.executeSql(
-        "DELETE FROM faker"
-      )
+      tx.executeSql("DELETE FROM faker");
 
       for (let i = 0; i < users.length; i++) {
         const item = users[i];
