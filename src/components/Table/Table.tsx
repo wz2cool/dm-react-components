@@ -56,7 +56,7 @@ export default class Table extends React.Component<TableProps, TableState> {
   private delayNewSourceTimer: any;
   private updateTimestamp = 0;
   private forceUpdateInterval = 100; // ms
-  private readonly sorts: Sort[] = [];
+  private sorts: Sort[] = [];
 
   constructor(props: TableProps) {
     super(props);
@@ -106,7 +106,7 @@ export default class Table extends React.Component<TableProps, TableState> {
                 <div
                   className="rc-table-cell rc-table-cell-header"
                   style={{ height: rowHeight }}
-                  onClick={() => this.handleClickHeader(column)}
+                  onClick={e => this.handleClickHeader(e, column)}
                 >
                   {column.headerTemplate ? (
                     column.headerTemplate
@@ -173,28 +173,34 @@ export default class Table extends React.Component<TableProps, TableState> {
     );
   }
 
-  private handleClickHeader = (columnDef: ColumnDef) => {
+  private handleClickHeader = (
+    e: React.MouseEvent<any>,
+    columnDef: ColumnDef,
+  ) => {
     if (columnDef.enableSorting !== true || !this.props.sortChanged) {
       return;
     }
 
-    const matchedSort = this.getMatchedSort(this.sorts, columnDef.field);
+    let matchedSort = this.getMatchedSort(this.sorts, columnDef.field);
     if (matchedSort) {
       if (matchedSort.direction === Direction.ASC) {
         // ASC -> DESC
         matchedSort.direction = Direction.DESC;
       } else {
-        // DESC -> remove sort
-        var index = this.sorts.indexOf(matchedSort);
-        if (index > -1) {
-          this.sorts.splice(index, 1);
-        }
+        matchedSort.direction = Direction.NONE;
       }
     } else {
-      const newSort = new Sort();
-      newSort.field = columnDef.field;
-      newSort.direction = Direction.ASC;
-      this.sorts.push(newSort);
+      matchedSort = new Sort();
+      matchedSort.field = columnDef.field;
+      matchedSort.direction = Direction.ASC;
+      this.sorts.push(matchedSort);
+    }
+
+    if (!e.ctrlKey) {
+      this.sorts = [];
+      if (matchedSort.direction !== Direction.NONE) {
+        this.sorts.push(matchedSort);
+      }
     }
     this.props.sortChanged(this.sorts);
   };
