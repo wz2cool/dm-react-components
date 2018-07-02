@@ -1,6 +1,8 @@
 import * as React from "react";
 import * as _ from "lodash";
-import Table, { TableProps } from "../components/Table";
+import Table from "../components/Table";
+import axios, { AxiosPromise, AxiosRequestConfig } from "axios";
+import { User } from "./model/user";
 
 declare const openDatabase: (
   db: string,
@@ -50,7 +52,6 @@ export default class TableExample extends React.Component<{}, State> {
                 display: "inline-block",
               }}
               onClick={e => {
-                alert(item.firstName + " " + item.lastName);
                 // prevent row active
                 e.stopPropagation();
               }}
@@ -84,6 +85,7 @@ export default class TableExample extends React.Component<{}, State> {
         <div style={{ height: "320px" }}>
           <Table options={tableOptions} />
         </div>
+        <button onClick={this.fillLocalDb}>fill local db</button>
         <button onClick={this.getData}>get data from WebSQL</button>
       </div>
     );
@@ -106,4 +108,69 @@ export default class TableExample extends React.Component<{}, State> {
       );
     });
   };
+
+  private fillLocalDb = async () => {
+    console.log("fillLocalDb start");
+    let users: User[] = [];
+    for (let i = 1; i <= 50; i++) {
+      console.log("get data: ", i);
+      const response = await this.getUsers(i);
+      const getUsers = response.data;
+      users = users.concat(getUsers);
+    }
+
+    db.transaction((tx: any) => {
+      tx.executeSql(
+        "CREATE TABLE IF NOT EXISTS faker (id UNIQUE, avatar, county, email, title, firstName, lastName, street, zipCode, date, bs, catchPhrase, companyName, words, sentence)",
+      );
+
+      tx.executeSql(
+        "DELETE FROM faker"
+      )
+
+      for (let i = 0; i < users.length; i++) {
+        const item = users[i];
+        tx.executeSql(
+          "INSERT INTO faker (id, avatar, county, email, title, firstName, lastName, street, zipCode, date, bs, catchPhrase, companyName, words, sentence) VALUES (" +
+            i +
+            ', "' +
+            item.avatar +
+            '", "' +
+            item.country +
+            '", "' +
+            item.email +
+            '", "' +
+            item.title +
+            '", "' +
+            item.firstName +
+            '", "' +
+            item.lastName +
+            '", "' +
+            item.street +
+            '", "' +
+            item.zipCode +
+            '", "' +
+            item.date +
+            '", "' +
+            item.bs +
+            '", "' +
+            item.catchPhrase +
+            '", "' +
+            item.companyName +
+            '", "' +
+            item.words +
+            '", "' +
+            item.sentence +
+            '")',
+        );
+      }
+    });
+
+    console.log("fillLocalDb end");
+  };
+
+  private getUsers(part: number): AxiosPromise<User[]> {
+    const url = `https://raw.githubusercontent.com/wz2cool/fake-data/master/users/users_${part}.json`;
+    return axios.get(url);
+  }
 }
