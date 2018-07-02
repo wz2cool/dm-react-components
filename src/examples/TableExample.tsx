@@ -13,7 +13,7 @@ declare const openDatabase: (
   cb?: any,
 ) => any;
 
-const db = openDatabase("dmdb", "1.0", "Test DB", 10 * 1024 * 1024);
+const db = openDatabase("dmdb", "1.0", "Test DB", 100 * 1024 * 1024);
 
 interface State {
   data: any[];
@@ -53,6 +53,7 @@ export default class TableExample extends React.Component<{}, State> {
                 display: "inline-block",
               }}
               onClick={e => {
+                alert(item.firstName + " " + item.lastName);
                 // prevent row active
                 e.stopPropagation();
               }}
@@ -93,7 +94,6 @@ export default class TableExample extends React.Component<{}, State> {
   }
 
   private getData = () => {
-    console.log(new Date().toJSON());
     const _that = this;
     db.transaction((tx: any) => {
       tx.executeSql(
@@ -104,7 +104,6 @@ export default class TableExample extends React.Component<{}, State> {
           _that.setState({
             data,
           });
-          console.log(new Date().toJSON());
         },
       );
     });
