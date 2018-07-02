@@ -1,0 +1,72 @@
+@themesLength: 3;
+@fontFamily: 'Microsoft Yahei';
+// grid
+@grid_color: #fff;
+@grid_header_color: #ccc;
+@grid_header_backgroundColor: #393e53;
+@grid_header_borderBottomColor: #000;
+@grid_odd_backgroundColor: #393e53;
+@grid_even_backgroundColor: #2f3243;
+@grid_rowActive_borderColor: #f78a09;
+// custom scrollbar
+@scrollbar_thumbHorizontal_backgroundColor: rgba(255, 255, 255, 0.3);
+@scrollbar_thumbVertical_backgroundColor: rgba(255, 255, 255, 0.3);
+// main common
+.main();
+// main with theme
+.buildThemes(0);
+.buildThemes(@i) when (@i < @themesLength) {
+    .theme-@{i} {
+        .themeDef(@i);
+        .mainWithTheme();
+    }
+    .buildThemes(@i + 1);
+}
+
+.themeDef(0) {
+    /** grid **/
+    @grid_color: #fff;
+    @grid_header_color: #ccc;
+    @grid_header_backgroundColor: #393e53;
+    @grid_header_borderBottomColor: #000;
+    @grid_odd_backgroundColor: #393e53;
+    @grid_even_backgroundColor: #2f3243;
+    /** custom scrollbar **/
+    @scrollbar_thumbHorizontal_backgroundColor: rgba(255, 255, 255, 0.3);
+    @scrollbar_thumbVertical_backgroundColor: rgba(255, 255, 255, 0.3);
+}
+
+.themeDef(1) {}
+
+.themeDef(2) {}
+
+.main() {
+}
+
+.mainWithTheme() {
+    font-family: @fontFamily;
+    .grid {
+        color: @grid_color;
+        .c-header {
+            color: @grid_header_color;
+            background-color: @grid_header_backgroundColor;
+            border-bottom: 1px solid @grid_header_borderBottomColor;
+        }
+        .c-odd {
+            background-color: @grid_odd_backgroundColor;
+        }
+        .c-even {
+            background-color: @grid_even_backgroundColor;
+        }
+        .grid-row-active {
+            border-top: 1px solid @grid_rowActive_borderColor;
+            border-bottom: 1px solid @grid_rowActive_borderColor;
+        }
+    }
+    .thumb-horizontal {
+        background-color: @scrollbar_thumbHorizontal_backgroundColor;
+    }
+    .thumb-vertical {
+        background-color: @scrollbar_thumbVertical_backgroundColor;
+    }
+}
