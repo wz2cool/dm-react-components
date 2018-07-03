@@ -129,7 +129,7 @@ export default class TableExample extends React.Component<{}, State> {
 
       tx.executeSql("Drop table faker");
       tx.executeSql(
-        "CREATE TABLE IF NOT EXISTS faker (id UNIQUE, avatar, country, email, title, firstName, lastName, street, zipCode, date, bs, catchPhrase, companyName, words, sentence)",
+        "CREATE TABLE IF NOT EXISTS faker (id UNIQUE, avatar, county, email, title, firstName, lastName, street, zipCode, date, bs, catchPhrase, companyName, words, sentence)",
       );
 
      
@@ -137,12 +137,12 @@ export default class TableExample extends React.Component<{}, State> {
       for (let i = 0; i < users.length; i++) {
         const item = users[i];
         tx.executeSql(
-          "INSERT INTO faker (id, avatar, country, email, title, firstName, lastName, street, zipCode, date, bs, catchPhrase, companyName, words, sentence) VALUES (" +
+          "INSERT INTO faker (id, avatar, county, email, title, firstName, lastName, street, zipCode, date, bs, catchPhrase, companyName, words, sentence) VALUES (" +
             i +
             ', "' +
             item.avatar +
             '", "' +
-            item.country +
+            item.county +
             '", "' +
             item.email +
             '", "' +

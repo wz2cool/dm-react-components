@@ -1,7 +1,7 @@
 export class User {
   id?: number;
   avatar?: string;
-  country?: string;
+  county?: string;
   email?: string;
   title?: string;
   firstName?: string;
