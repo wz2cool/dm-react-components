@@ -1,0 +1,52 @@
+.rc-table {
+  height: 100%;
+  display: flex;
+  background: #f8f8f8;
+}
+
+.rc-table .rc-table-list {
+  height: 100%;
+  flex: auto;
+  overflow-x: auto;
+  overflow-y: hidden;
+  display: flex;
+  flex-direction: row;
+}
+
+.rc-table .rc-table-scrollbar {
+  height: 100%;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.rc-table .rc-table-scrollbar .rc-table-scrollbar-header {
+  background: #eee;
+  border-bottom: 1px solid #ccc;
+  flex: none;
+}
+
+.rc-table .rc-table-scrollbar .rc-table-scrollbar-footer {
+  flex: none;
+}
+
+.rc-table .rc-table-column .rc-table-cell {
+  padding: 0 8px;
+}
+
+.rc-table .rc-table-column .rc-table-cell.rc-table-cell-header {
+  background: #eee;
+  border-right: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+  position: relative;
+}
+
+.rc-table .rc-table-column .rc-table-cell.rc-table-cell-selected {
+  background: #d6ebdc;
+}
+
+.rc-table .rc-table-column .rc-table-cell .rc-table-cell-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -20,6 +20,16 @@ rules.push({
     },
   ],
 });
+rules.push({
+  test: /\.css?$/,
+  use: [{
+      loader: 'style-loader'
+    },
+    {
+      loader: 'css-loader'
+    },
+  ],
+});
 
 const plugins = [];
 plugins.push(new HtmlWebpackPlugin({

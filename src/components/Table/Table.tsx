@@ -1,5 +1,5 @@
 import * as React from "react";
-import "./style.less";
+import "./style.css";
 import { Sort } from "./model/Sort";
 import { Direction } from "./model/direction";
 
@@ -26,6 +26,7 @@ export interface TableProps {
 }
 
 interface TableState {
+  selected: any;
   data: any[];
 }
 
@@ -62,6 +63,7 @@ export default class Table extends React.Component<TableProps, TableState> {
     super(props);
 
     this.state = {
+      selected: null,
       data: props.options.data.slice(0, this.limit),
     };
   }
@@ -80,6 +82,7 @@ export default class Table extends React.Component<TableProps, TableState> {
   }
 
   public render() {
+    const { selected } = this.state;
     const { options } = this.props;
     const { rowHeight, columnDefs, data } = options;
     const scrollHeight = data.length * rowHeight;
@@ -105,8 +108,11 @@ export default class Table extends React.Component<TableProps, TableState> {
               >
                 <div
                   className="rc-table-cell rc-table-cell-header"
-                  style={{ height: rowHeight }}
-                  onClick={e => this.handleClickHeader(e, column)}
+                  style={{
+                    height: rowHeight,
+                    cursor: column.enableSorting ? "pointer" : "auto",
+                  }}
+                  onClick={e => this.handleHeaderClick(e, column)}
                 >
                   {column.headerTemplate ? (
                     column.headerTemplate
@@ -122,8 +128,14 @@ export default class Table extends React.Component<TableProps, TableState> {
                     : item[column.field];
                   return (
                     <div
-                      className="rc-table-cell rc-table-cell-content"
+                      className={
+                        "rc-table-cell rc-table-cell-content" +
+                        (selected && selected.id === item.id
+                          ? " rc-table-cell-selected"
+                          : "")
+                      }
                       key={itemIndex}
+                      onClick={() => this.handleRowClick(item)}
                       style={
                         itemIndex === 0
                           ? {
@@ -173,7 +185,7 @@ export default class Table extends React.Component<TableProps, TableState> {
     );
   }
 
-  private handleClickHeader = (
+  private handleHeaderClick = (
     e: React.MouseEvent<any>,
     columnDef: ColumnDef,
   ) => {
@@ -226,6 +238,16 @@ export default class Table extends React.Component<TableProps, TableState> {
     this.delayDoAction(50, () => {
       this.setNewSource();
     });
+  };
+
+  private handleRowClick = (item: any) => {
+    let selected = null;
+    if (this.state.selected && this.state.selected.id === item.id) {
+      selected = null;
+    } else {
+      selected = item;
+    }
+    this.setState({ selected });
   };
 
   private setNewSource = () => {
