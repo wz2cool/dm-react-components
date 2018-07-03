@@ -18,7 +18,7 @@ declare const openDatabase: (
 const db = openDatabase("dmdb", "1.0", "Test DB", 100 * 1024 * 1024);
 
 interface State {
-  data: any[];
+  data: User[];
 }
 
 export default class TableExample extends React.Component<{}, State> {
@@ -178,6 +178,6 @@ export default class TableExample extends React.Component<{}, State> {
   }
 
   private handleSortChanged = (sorts: Sort[]) => {
-    console.log(sorts);
+    this.state.data;
   };
 }
