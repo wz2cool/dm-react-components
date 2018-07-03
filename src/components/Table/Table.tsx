@@ -28,6 +28,7 @@ export interface TableProps {
 
 interface TableState {
   selected: any;
+  sorts: Sort[];
   data: any[];
 }
 
@@ -58,13 +59,13 @@ export default class Table extends React.Component<TableProps, TableState> {
   delayNewSourceTimer: any;
   updateTimestamp = 0;
   forceUpdateInterval = 100; // ms
-  private sorts: Sort[] = [];
 
   constructor(props: TableProps) {
     super(props);
 
     this.state = {
       selected: null,
+      sorts: [],
       data: props.options.data.slice(0, this.limit),
     };
   }
@@ -91,7 +92,8 @@ export default class Table extends React.Component<TableProps, TableState> {
       return;
     }
 
-    let matchedSort = this.getMatchedSort(this.sorts, columnDef.field);
+    let sorts = this.state.sorts;
+    let matchedSort = this.getMatchedSort(sorts, columnDef.field);
     if (matchedSort) {
       if (matchedSort.direction === Direction.ASC) {
         // ASC -> DESC
@@ -103,16 +105,17 @@ export default class Table extends React.Component<TableProps, TableState> {
       matchedSort = new Sort();
       matchedSort.field = columnDef.field;
       matchedSort.direction = Direction.ASC;
-      this.sorts.push(matchedSort);
+      sorts.push(matchedSort);
     }
 
     if (!e.ctrlKey) {
-      this.sorts = [];
+      sorts = [];
       if (matchedSort.direction !== Direction.NONE) {
-        this.sorts.push(matchedSort);
+        sorts.push(matchedSort);
       }
     }
-    this.props.sortChanged(this.sorts);
+    this.props.sortChanged(sorts);
+    this.setState({ sorts });
   };
 
   handleWheel = (e: any) => {

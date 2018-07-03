@@ -1,9 +1,34 @@
 import * as React from "react";
 import Table from "./Table";
+import { Sort } from "./model/Sort";
+import { Direction } from "./model/direction";
+
+const DirectionComponent = ({
+  field,
+  sorts,
+}: {
+  field: string;
+  sorts: Sort[];
+}) => {
+  let direction = Direction.NONE;
+  for (const sort of sorts) {
+    if (sort.field === field) {
+      direction = sort.direction;
+      break;
+    }
+  }
+  let className = "rc-table-sort-icon";
+  if (direction === Direction.ASC) {
+    className = className + " rc-table-sort-asc";
+  } else if (direction === Direction.DESC) {
+    className = className + " rc-table-sort-desc";
+  }
+  return <span className={className} />;
+};
 
 const getView = (component: Table): JSX.Element => {
   const that = component;
-  const { selected } = that.state;
+  const { selected, sorts } = that.state;
   const { options } = that.props;
   const { rowHeight, columnDefs, data } = options;
   const scrollHeight = data.length * rowHeight;
@@ -36,10 +61,13 @@ const getView = (component: Table): JSX.Element => {
                 {column.headerTemplate ? (
                   column.headerTemplate
                 ) : (
-                  <div className="rc-table-cell-text">
+                  <span className="rc-table-cell-text">
                     {column.displayName || column.field}
-                  </div>
+                  </span>
                 )}
+                {column.enableSorting ? (
+                  <DirectionComponent field={column.field} sorts={sorts} />
+                ) : null}
               </div>
               {that.state.data.map((item, itemIndex) => {
                 const title = column.title

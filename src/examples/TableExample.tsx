@@ -40,7 +40,7 @@ export default class TableExample extends React.Component<{}, State> {
         {
           field: "name",
           displayName: "名字",
-          headerTemplate: <div>名字 (自定义)</div>,
+          headerTemplate: <span>名字 (自定义)</span>,
           minWidth: 200,
           enableSorting: true,
           cellTemplate: (item: any) => (
