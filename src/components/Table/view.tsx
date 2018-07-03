@@ -72,11 +72,14 @@ const getView = (component: Table): JSX.Element => {
                     column.headerTemplate
                   ) : (
                     <span className="rc-table-cell-text">
-                      {column.displayName || column.field}
+                      {column.displayName || column.field.toString()}
                     </span>
                   )}
                   {column.enableSorting ? (
-                    <DirectionComponent field={column.field} sorts={sorts} />
+                    <DirectionComponent
+                      field={column.field.toString()}
+                      sorts={sorts}
+                    />
                   ) : null}
                 </div>
                 {that.state.data.map((item, itemIndex) => {
