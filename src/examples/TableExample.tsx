@@ -5,6 +5,8 @@ import axios, { AxiosPromise, AxiosRequestConfig } from "axios";
 import { User } from "./model/user";
 import { Sort } from "../components/Table/model/Sort";
 
+import "./style.css";
+
 declare const openDatabase: (
   db: string,
   version: string,
@@ -84,12 +86,14 @@ export default class TableExample extends React.Component<{}, State> {
     };
 
     return (
-      <div>
-        <div style={{ height: "500px" }}>
+      <div className="layout">
+        <div className="header">
+          <button onClick={this.fillLocalDb}>fill local db</button>
+          <button onClick={this.getData}>get data from WebSQL</button>
+        </div>
+        <div className="content">
           <Table options={tableOptions} sortChanged={this.handleSortChanged} />
         </div>
-        <button onClick={this.fillLocalDb}>fill local db</button>
-        <button onClick={this.getData}>get data from WebSQL</button>
       </div>
     );
   }
