@@ -6,6 +6,7 @@ import { User } from "./model/user";
 import { Sort } from "../components/Table/model/Sort";
 
 import "./style.css";
+import { Direction } from "../components/Table/model/direction";
 
 declare const openDatabase: (
   db: string,
@@ -31,7 +32,7 @@ export default class TableExample extends React.Component<{}, State> {
   }
 
   public render() {
-    const tableOptions: TableOptions = {
+    const tableOptions: TableOptions<User> = {
       rowHeight: 30,
       columnDefs: [
         {
@@ -40,7 +41,7 @@ export default class TableExample extends React.Component<{}, State> {
           enableSorting: true,
         },
         {
-          field: "name",
+          field: "firstName",
           displayName: "名字",
           headerTemplate: <div>名字 (自定义)</div>,
           minWidth: 200,
@@ -125,16 +126,18 @@ export default class TableExample extends React.Component<{}, State> {
     }
 
     db.transaction((tx: any) => {
+
+      tx.executeSql("Drop table faker");
       tx.executeSql(
-        "CREATE TABLE IF NOT EXISTS faker (id UNIQUE, avatar, county, email, title, firstName, lastName, street, zipCode, date, bs, catchPhrase, companyName, words, sentence)",
+        "CREATE TABLE IF NOT EXISTS faker (id UNIQUE, avatar, country, email, title, firstName, lastName, street, zipCode, date, bs, catchPhrase, companyName, words, sentence)",
       );
 
-      tx.executeSql("DELETE FROM faker");
+     
 
       for (let i = 0; i < users.length; i++) {
         const item = users[i];
         tx.executeSql(
-          "INSERT INTO faker (id, avatar, county, email, title, firstName, lastName, street, zipCode, date, bs, catchPhrase, companyName, words, sentence) VALUES (" +
+          "INSERT INTO faker (id, avatar, country, email, title, firstName, lastName, street, zipCode, date, bs, catchPhrase, companyName, words, sentence) VALUES (" +
             i +
             ', "' +
             item.avatar +
@@ -178,6 +181,15 @@ export default class TableExample extends React.Component<{}, State> {
   }
 
   private handleSortChanged = (sorts: Sort[]) => {
-    this.state.data;
+    const fields: string[] = [];
+    const directions: string[] = [];
+
+    for (const sort of sorts) {
+      fields.push(sort.field!);
+      directions.push(Direction[sort.direction].toLocaleLowerCase());
+    }
+    const newData = _.orderBy(this.state.data, fields, directions);
+    this.setState({ data: newData });
+    console.log(newData[10]);
   };
 }

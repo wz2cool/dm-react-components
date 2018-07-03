@@ -4,8 +4,8 @@ import { Sort } from "./model/Sort";
 import { Direction } from "./model/direction";
 import { getView } from "./view";
 
-interface ColumnDef {
-  field: string;
+interface ColumnDef<T> {
+  field: keyof T;
   displayName?: string;
   title?: any;
   headerTemplate?: any;
@@ -15,14 +15,14 @@ interface ColumnDef {
   enableSorting?: boolean;
 }
 
-export interface TableOptions {
+export interface TableOptions<T> {
   rowHeight: number;
-  columnDefs: ColumnDef[];
-  data: any[];
+  columnDefs: ColumnDef<T>[];
+  data: T[];
 }
 
 export interface TableProps {
-  options: TableOptions;
+  options: TableOptions<any>;
   sortChanged?: (sorts: Sort[]) => void;
 }
 
@@ -79,7 +79,7 @@ export default class Table extends React.Component<TableProps, TableState> {
 
   public componentWillReceiveProps(nextProps: TableProps) {
     this.delayDoAction(50, () => {
-      this.setNewSource();
+      this.setNewSource(nextProps);
     });
   }
 
@@ -87,13 +87,13 @@ export default class Table extends React.Component<TableProps, TableState> {
     return getView(this);
   }
 
-  handleHeaderClick = (e: React.MouseEvent<any>, columnDef: ColumnDef) => {
+  handleHeaderClick = (e: React.MouseEvent<any>, columnDef: ColumnDef<any>) => {
     if (columnDef.enableSorting !== true || !this.props.sortChanged) {
       return;
     }
 
     let sorts = this.state.sorts;
-    let matchedSort = this.getMatchedSort(sorts, columnDef.field);
+    let matchedSort = this.getMatchedSort(sorts, columnDef.field.toString());
     if (matchedSort) {
       if (matchedSort.direction === Direction.ASC) {
         // ASC -> DESC
@@ -155,8 +155,8 @@ export default class Table extends React.Component<TableProps, TableState> {
     this.setState({ selected });
   };
 
-  private setNewSource = () => {
-    const { options } = this.props;
+  private setNewSource = (nextProps?: TableProps) => {
+    const { options } = nextProps || this.props;
     const { rowHeight, data } = options;
     const scrollTop = this.scrollBarWrapper.scrollTop;
     let index = Math.floor((scrollTop - this.scrollBarSize - 1) / rowHeight);
