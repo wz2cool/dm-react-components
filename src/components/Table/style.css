@@ -50,6 +50,7 @@
   border-right: 1px solid #ccc;
   border-bottom: 1px solid #ccc;
   user-select: none;
+  position: relative;
   display: flex;
 }
 
