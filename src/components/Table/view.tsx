@@ -11,19 +11,26 @@ const DirectionComponent = ({
   sorts: Sort[];
 }) => {
   let direction = Direction.NONE;
-  for (const sort of sorts) {
-    if (sort.field === field) {
-      direction = sort.direction;
+  let index = 0;
+  for (let i = 0; i < sorts.length; i++) {
+    if (sorts[i].field === field) {
+      direction = sorts[i].direction;
+      index = i + 1;
       break;
     }
   }
-  let className = "rc-table-sort-icon";
+  let iconClassName = "rc-table-sort-icon";
   if (direction === Direction.ASC) {
-    className = className + " rc-table-sort-asc";
+    iconClassName = iconClassName + " rc-table-sort-asc";
   } else if (direction === Direction.DESC) {
-    className = className + " rc-table-sort-desc";
+    iconClassName = iconClassName + " rc-table-sort-desc";
   }
-  return <span className={className} />;
+  return (
+    <span className="rc-table-sort">
+      <span className={iconClassName} />
+      <span className="rc-table-sort-index">{index ? index : ""}</span>
+    </span>
+  );
 };
 
 const getView = (component: Table): JSX.Element => {
