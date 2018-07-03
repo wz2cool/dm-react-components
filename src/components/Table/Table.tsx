@@ -100,6 +100,10 @@ export default class Table extends React.Component<TableProps, TableState> {
         matchedSort.direction = Direction.DESC;
       } else {
         matchedSort.direction = Direction.NONE;
+        const index = sorts.indexOf(matchedSort);
+        if (index > -1) {
+          sorts.splice(index, 1);
+        }
       }
     } else {
       matchedSort = new Sort();
