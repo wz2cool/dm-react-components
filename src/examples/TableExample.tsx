@@ -3,10 +3,10 @@ import * as _ from "lodash";
 import { Table, TableOptions } from "../components";
 import axios, { AxiosPromise, AxiosRequestConfig } from "axios";
 import { User } from "./model/user";
-import { Sort } from "../components/Table/model/Sort";
+import { Sort } from "../components/table/model/Sort";
 
 import "./style.css";
-import { Direction } from "../components/Table/model/direction";
+import { Direction } from "../components/table/model/direction";
 
 declare const openDatabase: (
   db: string,
@@ -184,11 +184,16 @@ export default class TableExample extends React.Component<{}, State> {
   private handleSortChanged = (sorts: Sort[]) => {
     const fields: string[] = [];
     const directions: string[] = [];
-
-    for (const sort of sorts) {
-      fields.push(sort.field!);
-      directions.push(Direction[sort.direction].toLocaleLowerCase());
+    if (sorts.length === 0) {
+      fields.push("id");
+      directions.push("asc");
+    } else {
+      for (const sort of sorts) {
+        fields.push(sort.field!);
+        directions.push(Direction[sort.direction].toLocaleLowerCase());
+      }
     }
+
     const newData = _.orderBy(this.state.data, fields, directions);
     this.setState({ data: newData });
   };
