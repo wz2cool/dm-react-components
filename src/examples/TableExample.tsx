@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as _ from "lodash";
-import Table, { TableOptions } from "../components/Table";
+import { Table, TableOptions } from "../components";
 import axios, { AxiosPromise, AxiosRequestConfig } from "axios";
 import { User } from "./model/user";
 import { Sort } from "../components/Table/model/Sort";
@@ -94,7 +94,10 @@ export default class TableExample extends React.Component<{}, State> {
         </div>
         <div className="content">
           <div className="content-inner">
-            <Table options={tableOptions} sortChanged={this.handleSortChanged} />
+            <Table
+              options={tableOptions}
+              sortChanged={this.handleSortChanged}
+            />
           </div>
         </div>
       </div>
@@ -117,64 +120,60 @@ export default class TableExample extends React.Component<{}, State> {
     });
   };
 
-  private fillLocalDb = async () => {
+  private fillLocalDb = () => {
     console.log("fillLocalDb start");
     let users: User[] = [];
     for (let i = 1; i <= 50; i++) {
-      console.log("get data: ", i);
-      const response = await this.getUsers(i);
-      const getUsers = response.data;
-      users = users.concat(getUsers);
+      this.getUsers(i).then((response: any) => {
+        console.log("get data: ", i);
+        const getUsers = response.data;
+        users = users.concat(getUsers);
+        db.transaction((tx: any) => {
+          tx.executeSql("Drop table faker");
+          tx.executeSql(
+            "CREATE TABLE IF NOT EXISTS faker (id UNIQUE, avatar, county, email, title, firstName, lastName, street, zipCode, date, bs, catchPhrase, companyName, words, sentence)",
+          );
+
+          for (let i = 0; i < users.length; i++) {
+            const item = users[i];
+            tx.executeSql(
+              "INSERT INTO faker (id, avatar, county, email, title, firstName, lastName, street, zipCode, date, bs, catchPhrase, companyName, words, sentence) VALUES (" +
+                i +
+                ', "' +
+                item.avatar +
+                '", "' +
+                item.county +
+                '", "' +
+                item.email +
+                '", "' +
+                item.title +
+                '", "' +
+                item.firstName +
+                '", "' +
+                item.lastName +
+                '", "' +
+                item.street +
+                '", "' +
+                item.zipCode +
+                '", "' +
+                item.date +
+                '", "' +
+                item.bs +
+                '", "' +
+                item.catchPhrase +
+                '", "' +
+                item.companyName +
+                '", "' +
+                item.words +
+                '", "' +
+                item.sentence +
+                '")',
+            );
+          }
+        });
+      });
+      console.log("fillLocalDb end");
     }
-
-    db.transaction((tx: any) => {
-
-      tx.executeSql("Drop table faker");
-      tx.executeSql(
-        "CREATE TABLE IF NOT EXISTS faker (id UNIQUE, avatar, county, email, title, firstName, lastName, street, zipCode, date, bs, catchPhrase, companyName, words, sentence)",
-      );
-
-     
-
-      for (let i = 0; i < users.length; i++) {
-        const item = users[i];
-        tx.executeSql(
-          "INSERT INTO faker (id, avatar, county, email, title, firstName, lastName, street, zipCode, date, bs, catchPhrase, companyName, words, sentence) VALUES (" +
-            i +
-            ', "' +
-            item.avatar +
-            '", "' +
-            item.county +
-            '", "' +
-            item.email +
-            '", "' +
-            item.title +
-            '", "' +
-            item.firstName +
-            '", "' +
-            item.lastName +
-            '", "' +
-            item.street +
-            '", "' +
-            item.zipCode +
-            '", "' +
-            item.date +
-            '", "' +
-            item.bs +
-            '", "' +
-            item.catchPhrase +
-            '", "' +
-            item.companyName +
-            '", "' +
-            item.words +
-            '", "' +
-            item.sentence +
-            '")',
-        );
-      }
-    });
-
-    console.log("fillLocalDb end");
   };
 
   private getUsers(part: number): AxiosPromise<User[]> {
