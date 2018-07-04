@@ -107,7 +107,7 @@ export default class Table extends React.Component<TableProps, TableState> {
       }
     } else {
       matchedSort = new Sort();
-      matchedSort.field = columnDef.field;
+      matchedSort.field = columnDef.field.toString();
       matchedSort.direction = Direction.ASC;
       sorts.push(matchedSort);
     }

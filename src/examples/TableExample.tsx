@@ -190,6 +190,5 @@ export default class TableExample extends React.Component<{}, State> {
     }
     const newData = _.orderBy(this.state.data, fields, directions);
     this.setState({ data: newData });
-    console.log(newData[10]);
   };
 }
