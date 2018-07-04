@@ -1,13 +1,14 @@
 {
-  "name": "@dm/react-components",
-  "version": "0.0.1",
+  "name": "dm-react-components",
+  "version": "0.0.1-beta0",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "webpack",
     "dev": "webpack-dev-server",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepublish": "tsc"
   },
   "author": "",
   "license": "ISC",
