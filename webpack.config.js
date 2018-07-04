@@ -34,12 +34,12 @@ rules.push({
 const plugins = [];
 plugins.push(new HtmlWebpackPlugin({
   filename: 'index.html',
-  template: path.join(__dirname, './src/index.html'),
+  template: path.join(__dirname, './src/examples/index.html'),
 }));
 
 module.exports = {
   context: path.resolve(__dirname, '.'),
-  entry: './src/index.tsx',
+  entry: './src/examples/index.tsx',
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'app.js',

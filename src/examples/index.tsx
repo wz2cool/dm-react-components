@@ -1,7 +1,6 @@
 import * as React from "react";
 import { render } from "react-dom";
-import TableExample from "./examples/TableExample";
-import "./app.less";
+import TableExample from "./TableExample";
 
 class Examples extends React.Component {
   public render() {

@@ -92,7 +92,9 @@ export default class TableExample extends React.Component<{}, State> {
           <button onClick={this.getData}>get data from WebSQL</button>
         </div>
         <div className="content">
-          <Table options={tableOptions} sortChanged={this.handleSortChanged} />
+          <div className="content-inner">
+            <Table options={tableOptions} sortChanged={this.handleSortChanged} />
+          </div>
         </div>
       </div>
     );
