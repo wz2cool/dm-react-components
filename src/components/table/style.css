@@ -3,6 +3,56 @@
   height: 100%;
   display: flex;
   background: #f8f8f8;
+  position: relative;
+}
+
+.rc-table .rc-table-loading-mask {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 999;
+}
+
+.rc-table .rc-table-loading-icon {
+  width: 100px;
+  height: 100px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 6px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.rc-table .rc-table-resizer-mask {
+  cursor: col-resize;
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 999;
+}
+
+.rc-table .rc-table-resizer {
+  width: 4px;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  right: -1px;
+  z-index: 999;
+}
+
+.rc-table .rc-table-resizer-inner {
+  width: 4px;
+  height: 100%;
+  cursor: col-resize;
+  display: block;
 }
 
 .rc-table .rc-table-list {
@@ -36,12 +86,18 @@
 }
 
 .rc-table .rc-table-column .rc-table-cell.rc-table-cell-header {
+  padding: 0;
   background: #eee;
   border-right: 1px solid #ccc;
   border-bottom: 1px solid #ccc;
   user-select: none;
+  -webkit-user-select: none;
   position: relative;
   display: flex;
+}
+
+.rc-table .rc-table-column .rc-table-cell.rc-table-cell-header .rc-table-cell-header-content {
+  padding: 0 8px;
 }
 
 .rc-table .rc-table-column .rc-table-cell.rc-table-cell-selected {
@@ -52,10 +108,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.rc-table-sort {
-  margin-left: 4px;
 }
 
 .rc-table-sort .rc-table-sort-icon {

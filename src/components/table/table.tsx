@@ -1,8 +1,8 @@
 import * as React from "react";
-import "./style.css";
 import { Sort } from "./model/Sort";
 import { Direction } from "./model/direction";
 import { getView } from "./view";
+import "./style.css";
 
 interface ColumnDef<T> {
   field: keyof T;
@@ -24,11 +24,18 @@ export interface TableOptions<T> {
 export interface TableProps {
   options: TableOptions<any>;
   sortChanged?: (sorts: Sort[]) => void;
+  isLoading?: boolean;
+}
+
+interface MyColumnDef<T> extends ColumnDef<T> {
+  resizedWidth?: number;
 }
 
 interface TableState {
   selected: any;
+  resizer: any;
   sorts: Sort[];
+  columnDefs: MyColumnDef<any>[];
   data: any[];
 }
 
@@ -51,22 +58,41 @@ function getScrollBarSize() {
 }
 
 export default class Table extends React.Component<TableProps, TableState> {
-  scrollBarSize = 0;
-  listWrapper: any;
-  scrollBarWrapper: any;
-  listOffsetY = 0;
-  limit = 50;
-  delayNewSourceTimer: any;
-  updateTimestamp = 0;
-  forceUpdateInterval = 100; // ms
+  public scrollBarSize = 0;
+  public listWrapper: any;
+  public scrollBarWrapper: any;
+  public listOffsetY = 0;
+  public scrollHeight = 0;
+  
+  // resizer
+  private resizerLine: any;
+
+  // page limit(include visible and unvisible item)
+  private limit = 50;
+
+  // delay scroll event
+  private delayNewSourceTimer: any;
+  private updateTimestamp = 0;
+  private timeout = 100; // ms
+  private forceUpdateInterval = 300; // ms
 
   constructor(props: TableProps) {
     super(props);
 
+    const { options } = props;
+    const { rowHeight, columnDefs, data } = options;
+
+    this.scrollHeight = data.length * rowHeight;
     this.state = {
       selected: null,
+      resizer: {
+        isColumnResizing: false,
+        resizingColumn: undefined,
+        resizeWidth: 0,
+      },
+      columnDefs,
       sorts: [],
-      data: props.options.data.slice(0, this.limit),
+      data: data.slice(0, this.limit),
     };
   }
 
@@ -75,20 +101,50 @@ export default class Table extends React.Component<TableProps, TableState> {
     const { options } = this.props;
     const { rowHeight } = options;
     this.limit = Math.ceil(this.listWrapper.offsetHeight / rowHeight) + 5;
+    window.addEventListener("resize", this.handleWindowResize);
   }
 
   public componentWillReceiveProps(nextProps: TableProps) {
-    this.delayDoAction(50, () => {
-      this.setNewSource(nextProps);
+    this.delayDoAction(this.delayNewSourceTimer, this.timeout, () => {
+      const { options } = nextProps;
+      const { rowHeight, data } = options;
+      const nextColumnDefs: MyColumnDef<any>[] = options.columnDefs;
+      const columnDefs: MyColumnDef<any>[] = this.state.columnDefs;
+      for (let i = 0; i < nextColumnDefs.length; i++) {
+        const nextColumnDef = nextColumnDefs[i];
+        for (let m = 0; m < columnDefs.length; m++) {
+          const columnDef = columnDefs[m];
+          if (columnDef.field === nextColumnDef.field) {
+            nextColumnDef.resizedWidth = columnDef.resizedWidth;
+          }
+        }
+      }
+
+      this.scrollHeight = data.length * rowHeight;
+      this.setState({
+        columnDefs: nextColumnDefs,
+      });
+      this.updateData(nextProps);
     });
+  }
+
+  public componentWillUnmount() {
+    window.removeEventListener("resize", this.handleWindowResize);
   }
 
   public render(): JSX.Element {
     return getView(this);
   }
 
-  handleHeaderClick = (e: React.MouseEvent<any>, columnDef: ColumnDef<any>) => {
-    if (columnDef.enableSorting !== true || !this.props.sortChanged) {
+  public handleHeaderClick = (
+    e: React.MouseEvent<any>,
+    columnDef: ColumnDef<any>,
+  ) => {
+    if (
+      columnDef.enableSorting !== true ||
+      !this.props.sortChanged ||
+      this.state.resizer.isColumnResizing
+    ) {
       return;
     }
 
@@ -122,7 +178,7 @@ export default class Table extends React.Component<TableProps, TableState> {
     this.setState({ sorts });
   };
 
-  handleWheel = (e: any) => {
+  public handleWheel = (e: any) => {
     const { options } = this.props;
     const { rowHeight, data } = options;
     let scrollTop = this.scrollBarWrapper.scrollTop + e.deltaY;
@@ -139,15 +195,15 @@ export default class Table extends React.Component<TableProps, TableState> {
     }
   };
 
-  handleScroll = () => {
-    this.delayDoAction(50, () => {
-      this.setNewSource();
+  public handleScroll = () => {
+    this.delayDoAction(this.delayNewSourceTimer, this.timeout, () => {
+      this.updateData();
     });
   };
 
-  handleRowClick = (item: any) => {
+  public handleRowClick = (item: any) => {
     let selected = null;
-    if (this.state.selected && this.state.selected.id === item.id) {
+    if (this.state.selected && this.state.selected === item) {
       selected = null;
     } else {
       selected = item;
@@ -155,37 +211,107 @@ export default class Table extends React.Component<TableProps, TableState> {
     this.setState({ selected });
   };
 
-  private setNewSource = (nextProps?: TableProps) => {
+  public handleResizerMouseDown = (
+    e: any,
+    column: ColumnDef<any>,
+    defaultWidth: number,
+  ) => {
+    const resizer = this.state.resizer;
+    resizer.isColumnResizing = true;
+    resizer.resizingColumn = column;
+    resizer.resizeMouseX = e.clientX;
+    const columnDefs = this.state.columnDefs;
+    for (let i = 0; i < columnDefs.length; i++) {
+      if (columnDefs[i].field === column.field) {
+        columnDefs[i].resizedWidth = defaultWidth;
+        break;
+      }
+    }
+    this.setState({ resizer });
+    document.addEventListener("mouseup", this.handleGlobalMouseUp, true);
+
+    const resizerLine = document.createElement("div");
+    resizerLine.style.width = "1px";
+    resizerLine.style.height = "100%";
+    resizerLine.style.background = "#666";
+    resizerLine.style.position = "fixed";
+    resizerLine.style.top = "0px";
+    resizerLine.style.left = e.clientX + "px";
+    document.body.appendChild(resizerLine);
+    this.resizerLine = resizerLine;
+    document.addEventListener("mousemove", this.handleGlobalMouseMove, true);
+
+    e.preventDefault();
+  };
+
+  private handleGlobalMouseMove = (e: any) => {
+    if (this.resizerLine) {
+      this.resizerLine.style.left = e.clientX + "px";
+    }
+  };
+
+  private handleGlobalMouseUp = (e: any) => {
+    this.resizeColumn(e);
+    if (this.resizerLine) {
+      document.body.removeChild(this.resizerLine);
+      this.resizerLine = undefined;
+    }
+    setTimeout(() => {
+      this.state.resizer.isColumnResizing = false;
+      this.setState({});
+    }, 100);
+    document.removeEventListener("mouseup", this.handleGlobalMouseUp, true);
+  };
+
+  private resizeColumn = (e: any) => {
+    const { resizer, columnDefs } = this.state;
+    const { isColumnResizing, resizeMouseX, resizingColumn } = resizer;
+    if (isColumnResizing && resizingColumn) {
+      const resizeDiffX = e.clientX - resizeMouseX;
+      let isInResizedColumns = false;
+      for (let i = 0; i < columnDefs.length; i++) {
+        if (columnDefs[i].field === resizingColumn.field) {
+          let width = (columnDefs[i].resizedWidth || 0) + resizeDiffX;
+          if (width < 20) {
+            width = 20;
+          }
+          columnDefs[i].resizedWidth = width;
+          isInResizedColumns = true;
+          break;
+        }
+      }
+      resizer.resizeMouseX = e.clientX;
+      this.setState({ resizer, columnDefs }, () => {
+        this.updateData();
+      });
+    }
+  };
+
+  private handleWindowResize = () => {
+    this.delayDoAction(this.delayNewSourceTimer, this.timeout, () => {
+      this.updateData();
+    });
+  };
+
+  private updateData = (nextProps?: TableProps) => {
     const { options } = nextProps || this.props;
     const { rowHeight, data } = options;
     const scrollTop = this.scrollBarWrapper.scrollTop;
-    let index = Math.floor((scrollTop - this.scrollBarSize - 1) / rowHeight);
-    index = index >= 0 ? index : 0;
-
-    if (
-      scrollTop + this.listWrapper.offsetHeight >
-        (data.length - 5) * rowHeight ||
-      scrollTop < 5 * rowHeight
-    ) {
-      if (this.listWrapper.clientHeight !== this.listWrapper.offsetHeight) {
-        // if has scroll bar
-        this.listOffsetY =
-          -(
-            scrollTop /
-            (data.length * rowHeight - rowHeight - this.scrollBarSize - 1)
-          ) *
-          (rowHeight -
-            ((this.listWrapper.offsetHeight - 1 - this.scrollBarSize) %
-              rowHeight));
-      } else {
-        // if has not scroll bar
-        this.listOffsetY =
-          -(
-            scrollTop /
-            (data.length * rowHeight - rowHeight - this.scrollBarSize - 1)
-          ) *
-          (rowHeight - ((this.listWrapper.offsetHeight - 1) % rowHeight));
-      }
+    // list visible size
+    const listVisibleSize = this.listWrapper.clientHeight / rowHeight;
+    // list index offset 0.9 => 0  1.9 => 1
+    let index = Math.floor(scrollTop / rowHeight);
+    // update offsetY of first item of list when scroll to bottom
+    if (data.length - index < listVisibleSize) {
+      // -1: header has 1px border-bottom
+      this.listOffsetY =
+        ((this.listWrapper.clientHeight - 1) % rowHeight) - rowHeight;
+    } else {
+      this.listOffsetY = 0;
+    }
+    // reset index if has whitespace when scroll to bottom
+    if (data.length - index + 1 < listVisibleSize) {
+      index = index - 1;
     }
 
     this.setState({
@@ -193,9 +319,9 @@ export default class Table extends React.Component<TableProps, TableState> {
     });
   };
 
-  private delayDoAction = (timeout: number, action: () => void) => {
-    if (this.delayNewSourceTimer) {
-      clearTimeout(this.delayNewSourceTimer);
+  private delayDoAction = (timer: any, timeout: number, action: () => void) => {
+    if (timer) {
+      clearTimeout(timer);
     }
 
     const timeDiff = new Date().getTime() - this.updateTimestamp;
@@ -203,7 +329,7 @@ export default class Table extends React.Component<TableProps, TableState> {
       this.updateTimestamp = new Date().getTime();
       action();
     } else {
-      this.delayNewSourceTimer = setTimeout(() => {
+      timer = setTimeout(() => {
         this.updateTimestamp = new Date().getTime();
         action();
       }, timeout);
