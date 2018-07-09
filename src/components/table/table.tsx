@@ -302,7 +302,8 @@ export default class Table extends React.Component<TableProps, TableState> {
     // list index offset 0.9 => 0  1.9 => 1
     let index = Math.floor(scrollTop / rowHeight);
     // update offsetY of first item of list when scroll to bottom
-    if (data.length - index < listVisibleSize) {
+    const dataLength = data.length;
+    if (dataLength - index < listVisibleSize) {
       // -1: header has 1px border-bottom
       this.listOffsetY =
         ((this.listWrapper.clientHeight - 1) % rowHeight) - rowHeight;
@@ -310,7 +311,7 @@ export default class Table extends React.Component<TableProps, TableState> {
       this.listOffsetY = 0;
     }
     // reset index if has whitespace when scroll to bottom
-    if (data.length - index + 1 < listVisibleSize) {
+    if (dataLength - index + 1 < listVisibleSize) {
       index = index - 1;
     }
 
