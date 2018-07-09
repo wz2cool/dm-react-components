@@ -69,6 +69,7 @@ const getView = (component: Table): JSX.Element => {
   const { options, isLoading } = props;
   const { rowHeight, data: optionsData } = options;
   const { resizedColumns, isColumnResizing } = resizer;
+  console.log(1111);
   return (
     <div className="rc-table">
       {isLoading ? (

@@ -70,11 +70,11 @@ export default class Table extends React.Component<TableProps, TableState> {
   // page limit(include visible and unvisible item)
   private limit = 50;
 
-  // delay scroll event
-  private delayNewSourceTimer: any;
+  // delay
+  private delayTimer: any;
   private updateTimestamp = 0;
   private timeout = 100; // ms
-  private forceUpdateInterval = 300; // ms
+  private forceUpdateInterval = 200; // ms
 
   constructor(props: TableProps) {
     super(props);
@@ -105,7 +105,7 @@ export default class Table extends React.Component<TableProps, TableState> {
   }
 
   public componentWillReceiveProps(nextProps: TableProps) {
-    this.delayDoAction(this.delayNewSourceTimer, this.timeout, () => {
+    this.delayDoAction(this.timeout, () => {
       const { options } = nextProps;
       const { rowHeight, data } = options;
       const nextColumnDefs: MyColumnDef<any>[] = options.columnDefs;
@@ -196,7 +196,7 @@ export default class Table extends React.Component<TableProps, TableState> {
   };
 
   public handleScroll = () => {
-    this.delayDoAction(this.delayNewSourceTimer, this.timeout, () => {
+    this.delayDoAction(this.timeout, () => {
       this.updateData();
     });
   };
@@ -288,7 +288,7 @@ export default class Table extends React.Component<TableProps, TableState> {
   };
 
   private handleWindowResize = () => {
-    this.delayDoAction(this.delayNewSourceTimer, this.timeout, () => {
+    this.delayDoAction(this.timeout, () => {
       this.updateData();
     });
   };
@@ -320,9 +320,9 @@ export default class Table extends React.Component<TableProps, TableState> {
     });
   };
 
-  private delayDoAction = (timer: any, timeout: number, action: () => void) => {
-    if (timer) {
-      clearTimeout(timer);
+  private delayDoAction = (timeout: number, action: () => void) => {
+    if (this.delayTimer) {
+      clearTimeout(this.delayTimer);
     }
 
     const timeDiff = new Date().getTime() - this.updateTimestamp;
@@ -330,7 +330,7 @@ export default class Table extends React.Component<TableProps, TableState> {
       this.updateTimestamp = new Date().getTime();
       action();
     } else {
-      timer = setTimeout(() => {
+      this.delayTimer = setTimeout(() => {
         this.updateTimestamp = new Date().getTime();
         action();
       }, timeout);
