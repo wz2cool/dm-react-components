@@ -2,7 +2,6 @@ import * as React from "react";
 import { Sort } from "./model/Sort";
 import { Direction } from "./model/direction";
 import { getView } from "./view";
-import "./style.css";
 
 interface ColumnDef<T> {
   field: keyof T;
@@ -63,7 +62,7 @@ export default class Table extends React.Component<TableProps, TableState> {
   public scrollBarWrapper: any;
   public listOffsetY = 0;
   public scrollHeight = 0;
-  
+
   // resizer
   private resizerLine: any;
 
@@ -124,7 +123,7 @@ export default class Table extends React.Component<TableProps, TableState> {
       this.setState({
         columnDefs: nextColumnDefs,
       });
-      this.updateData();
+      this.updateData(nextProps);
     });
   }
 

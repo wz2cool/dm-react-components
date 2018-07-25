@@ -1,7 +1,143 @@
 import * as React from "react";
+import styled from "styled-components";
 import Table from "./table";
 import { Sort } from "./model/Sort";
 import { Direction } from "./model/direction";
+
+const Wrap = styled.div`
+  width: 100%;
+  height: 100%;
+  display: flex;
+  background: #f8f8f8;
+  position: relative;
+`;
+
+const LoadingMask = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 999;
+`;
+
+const LoadingContent = styled.div``;
+
+const LoadingIcon = styled.div`
+  width: 100px;
+  height: 100px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 6px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
+const ResizerMask = styled.div`
+  cursor: col-resize;
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 999;
+`;
+
+const Resizer = styled.span`
+  width: 4px;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  right: -1px;
+  z-index: 999;
+`;
+
+const ResizerInner = styled.span`
+  width: 4px;
+  height: 100%;
+  cursor: col-resize;
+  display: block;
+`;
+
+const ScrollbarHeader = styled.div``;
+
+const ScrollbarFooter = styled.div``;
+
+const Scrollbar = styled.div`
+  height: 100%;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  ${ScrollbarHeader} {
+    background: #eee;
+    border-bottom: 1px solid #ccc;
+    flex: none;
+  }
+  ${ScrollbarFooter} {
+    flex: none;
+  }
+`;
+
+const Column = styled.div``;
+
+const Cell = styled.div`
+  padding: 0 8px;
+`;
+
+const CellHeader = Cell.extend`
+  padding: 0;
+  background: #eee;
+  border-right: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+  user-select: none;
+  position: relative;
+  display: flex;
+`;
+
+const CellHeaderContent = styled.div`
+  padding: 0 8px;
+`;
+
+const CellSelected = Cell.extend`
+  background: #d6ebdc;
+`;
+
+const CellText = styled.div`
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+const SortWrap = styled.span``;
+
+const SortIcon = styled.span`
+  width: 0;
+  height: 0;
+  vertical-align: middle;
+  display: inline-block;
+  border-color: #666;
+  border-style: solid;
+  border-width: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+`;
+
+const SortIconAsc = SortIcon.extend`
+  border-bottom-width: 4px;
+`;
+
+const SortIconDesc = SortIcon.extend`
+  border-top-width: 4px;
+`;
+
+const SortIndex = styled.span`
+  vertical-align: middle;
+  font-size: 12px;
+`;
 
 const DirectionComponent = ({
   field,
@@ -19,17 +155,17 @@ const DirectionComponent = ({
       break;
     }
   }
-  let iconClassName = "rc-table-sort-icon";
+  let SortIconElement = SortIcon;
   if (direction === Direction.ASC) {
-    iconClassName = iconClassName + " rc-table-sort-asc";
+    SortIconElement = SortIconAsc;
   } else if (direction === Direction.DESC) {
-    iconClassName = iconClassName + " rc-table-sort-desc";
+    SortIconElement = SortIconDesc;
   }
   return (
-    <span className="rc-table-sort">
-      <span className={iconClassName} />
-      <span className="rc-table-sort-index">{index ? index : ""}</span>
-    </span>
+    <SortWrap>
+      <SortIconElement />
+      <SortIndex>{index ? index : ""}</SortIndex>
+    </SortWrap>
   );
 };
 
@@ -69,26 +205,31 @@ const getView = (component: Table): JSX.Element => {
   const { options, isLoading } = props;
   const { rowHeight, data: optionsData } = options;
   const { resizedColumns, isColumnResizing } = resizer;
-  console.log(1111);
   return (
-    <div className="rc-table">
+    <Wrap>
       {isLoading ? (
-        <div className="rc-table-loading-mask">
-          <div className="rc-table-loading-content">
-            <div className="rc-table-loading-icon">Loading...</div>
-          </div>
-        </div>
+        <LoadingMask>
+          <LoadingContent>
+            <LoadingIcon>Loading...</LoadingIcon>
+          </LoadingContent>
+        </LoadingMask>
       ) : null}
-      {isColumnResizing ? <div className="rc-table-resizer-mask" /> : null}
+      {isColumnResizing ? <ResizerMask /> : null}
       <div
-        className="rc-table-list"
-        ref={node => (that.listWrapper = node)}
+        style={{
+          height: "100%",
+          flex: "auto",
+          overflowX: "auto",
+          overflowY: "hidden",
+          display: "flex",
+          flexDirection: "row",
+        }}
+        ref={(node: any) => (that.listWrapper = node)}
         onWheel={e => handleWheel(e)}
       >
         {columnDefs.map((column, columnIndex) => {
           return (
             <div
-              className="rc-table-column"
               key={columnIndex}
               style={{
                 minWidth: column.resizedWidth
@@ -103,23 +244,22 @@ const getView = (component: Table): JSX.Element => {
                     : "1 1 100%",
               }}
             >
-              <div
-                className="rc-table-cell rc-table-cell-header"
+              <CellHeader
                 style={{
                   height: rowHeight,
                   cursor: column.enableSorting ? "pointer" : "auto",
                 }}
-                onClick={e => handleHeaderClick(e, column)}
+                onClick={(e: any) => handleHeaderClick(e, column)}
               >
-                <div className="rc-table-cell-header-content">
+                <CellHeaderContent>
                   {column.headerTemplate ? (
                     column.headerTemplate
                   ) : (
-                    <span className="rc-table-cell-text">
+                    <CellText>
                       {column.displayName || column.field.toString()}
-                    </span>
+                    </CellText>
                   )}
-                </div>
+                </CellHeaderContent>
                 {column.enableSorting ? (
                   <DirectionComponent
                     field={column.field.toString()}
@@ -128,9 +268,8 @@ const getView = (component: Table): JSX.Element => {
                 ) : null}
                 <div style={{ flex: "auto" }} />
                 {true ? (
-                  <span className="rc-table-resizer">
-                    <span
-                      className="rc-table-resizer-inner"
+                  <Resizer>
+                    <ResizerInner
                       onMouseDown={(e: any) =>
                         handleResizerMouseDown(
                           e,
@@ -140,21 +279,17 @@ const getView = (component: Table): JSX.Element => {
                         )
                       }
                     />
-                  </span>
+                  </Resizer>
                 ) : null}
-              </div>
+              </CellHeader>
               {data.map((item, itemIndex) => {
                 const title = column.title
                   ? column.title(item)
                   : item[column.field.toString()];
+                const CellElement =
+                  selected && selected === item ? CellSelected : Cell;
                 return (
-                  <div
-                    className={
-                      "rc-table-cell rc-table-cell-content" +
-                      (selected && selected === item
-                        ? " rc-table-cell-selected"
-                        : "")
-                    }
+                  <CellElement
                     key={itemIndex}
                     onClick={() => handleRowClick(item)}
                     style={
@@ -169,33 +304,24 @@ const getView = (component: Table): JSX.Element => {
                     {column.cellTemplate ? (
                       column.cellTemplate(item)
                     ) : (
-                      <div className="rc-table-cell-text" title={title}>
-                        {item[column.field]}
-                      </div>
+                      <CellText title={title}>{item[column.field]}</CellText>
                     )}
-                  </div>
+                  </CellElement>
                 );
               })}
             </div>
           );
         })}
-        <div className="rc-table-column" style={{ flex: "1 0 auto" }}>
-          <div
-            className="rc-table-cell rc-table-cell-header"
-            style={{ borderRight: "none", height: rowHeight }}
-          />
-        </div>
+        <Column style={{ flex: "1 0 auto" }}>
+          <CellHeader style={{ borderRight: "none", height: rowHeight }} />
+        </Column>
       </div>
-      <div
-        className="rc-table-scrollbar"
+      <Scrollbar
         style={{
           width: scrollBarSize,
         }}
       >
-        <div
-          className="rc-table-scrollbar-header"
-          style={{ height: rowHeight }}
-        />
+        <ScrollbarHeader style={{ height: rowHeight }} />
         <div
           ref={node => (that.scrollBarWrapper = node)}
           onScroll={e => handleScroll()}
@@ -203,12 +329,9 @@ const getView = (component: Table): JSX.Element => {
         >
           <div style={{ width: "1px", height: scrollHeight }} />
         </div>
-        <div
-          className="rc-table-scrollbar-footer"
-          style={{ height: scrollBarSize }}
-        />
-      </div>
-    </div>
+        <ScrollbarFooter style={{ height: scrollBarSize }} />
+      </Scrollbar>
+    </Wrap>
   );
 };
 
