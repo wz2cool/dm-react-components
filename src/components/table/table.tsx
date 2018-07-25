@@ -124,7 +124,7 @@ export default class Table extends React.Component<TableProps, TableState> {
       this.setState({
         columnDefs: nextColumnDefs,
       });
-      this.updateData(nextProps);
+      this.updateData();
     });
   }
 
