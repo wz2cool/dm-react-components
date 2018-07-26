@@ -18,7 +18,7 @@ declare const openDatabase: (
 
 const db = openDatabase("dmdb", "1.0", "Test DB", 100 * 1024 * 1024);
 
-interface State {
+export interface State {
   isTableLoading: boolean;
   data: User[];
 }

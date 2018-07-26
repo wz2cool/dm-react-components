@@ -3,7 +3,7 @@ import { Sort } from "./model/Sort";
 import { Direction } from "./model/direction";
 import { getView } from "./view";
 
-interface ColumnDef<T> {
+export interface ColumnDef<T> {
   field: keyof T;
   displayName?: string;
   title?: any;
@@ -26,15 +26,15 @@ export interface TableProps {
   isLoading?: boolean;
 }
 
-interface MyColumnDef<T> extends ColumnDef<T> {
+export interface TableColumnDef<T> extends ColumnDef<T> {
   resizedWidth?: number;
 }
 
-interface TableState {
+export interface TableState {
   selected: any;
   resizer: any;
   sorts: Sort[];
-  columnDefs: MyColumnDef<any>[];
+  columnDefs: TableColumnDef<any>[];
   data: any[];
 }
 
@@ -107,8 +107,8 @@ export default class Table extends React.Component<TableProps, TableState> {
     this.delayDoAction(this.timeout, () => {
       const { options } = nextProps;
       const { rowHeight, data } = options;
-      const nextColumnDefs: MyColumnDef<any>[] = options.columnDefs;
-      const columnDefs: MyColumnDef<any>[] = this.state.columnDefs;
+      const nextColumnDefs: TableColumnDef<any>[] = options.columnDefs;
+      const columnDefs: TableColumnDef<any>[] = this.state.columnDefs;
       for (let i = 0; i < nextColumnDefs.length; i++) {
         const nextColumnDef = nextColumnDefs[i];
         for (let m = 0; m < columnDefs.length; m++) {
