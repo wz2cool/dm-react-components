@@ -8,7 +8,7 @@
     "build": "webpack",
     "dev": "webpack-dev-server",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "prepublish": "tsc"
+    "prepublish": "tsc -d"
   },
   "author": "",
   "license": "ISC",
