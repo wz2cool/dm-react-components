@@ -71,7 +71,7 @@ export default class TableExample extends React.Component<{}, State> {
         {
           field: "companyName",
           displayName: "公司",
-          minWidth: 300,
+          minWidth: 100,
         },
         {
           field: "email",

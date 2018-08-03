@@ -3,41 +3,6 @@ import { Sort } from "./model/Sort";
 import { Direction } from "./model/direction";
 import { getView } from "./view";
 
-export interface ColumnDef<T> {
-  field: keyof T;
-  displayName?: string;
-  title?: any;
-  headerTemplate?: any;
-  cellTemplate?: any;
-  width?: number;
-  minWidth?: number;
-  enableSorting?: boolean;
-}
-
-export interface TableOptions<T> {
-  rowHeight: number;
-  columnDefs: ColumnDef<T>[];
-  data: T[];
-}
-
-export interface TableProps {
-  options: TableOptions<any>;
-  sortChanged?: (sorts: Sort[]) => void;
-  isLoading?: boolean;
-}
-
-export interface TableColumnDef<T> extends ColumnDef<T> {
-  resizedWidth?: number;
-}
-
-export interface TableState {
-  selected: any;
-  resizer: any;
-  sorts: Sort[];
-  columnDefs: TableColumnDef<any>[];
-  data: any[];
-}
-
 function getScrollBarSize() {
   const scrollDiv = document.createElement("div");
   scrollDiv.style.width = "100px";
@@ -54,6 +19,49 @@ function getScrollBarSize() {
   document.body.removeChild(scrollDiv);
 
   return scrollbarSize;
+}
+
+export interface ColumnDef<T> {
+  field: keyof T;
+  displayName?: string;
+  title?: any;
+  headerTemplate?: any;
+  cellTemplate?: any;
+  width?: number;
+  minWidth?: number;
+  enableSorting?: boolean;
+}
+
+export interface TableOptions<T> {
+  rowHeight: number;
+  headerHeight?: number;
+  columnDefs: ColumnDef<T>[];
+  data: T[];
+  onSelected?: (item: T) => void;
+}
+
+export interface TableProps {
+  options: TableOptions<any>;
+  sortChanged?: (sorts: Sort[]) => void;
+  isLoading?: boolean;
+  theme?: {
+    row?: React.CSSProperties;
+    headerCell?: React.CSSProperties;
+    contentCell?: React.CSSProperties;
+  };
+}
+
+export interface TableColumnDef<T> extends ColumnDef<T> {
+  resizedWidth?: number;
+}
+
+export interface TableState {
+  selected: any;
+  resizer: any;
+  sorts: Sort[];
+  isShowScrollbarY: boolean;
+  columnDefs: TableColumnDef<any>[];
+  data: any[];
 }
 
 export default class Table extends React.Component<TableProps, TableState> {
@@ -91,6 +99,7 @@ export default class Table extends React.Component<TableProps, TableState> {
       },
       columnDefs,
       sorts: [],
+      isShowScrollbarY: false,
       data: data.slice(0, this.limit),
     };
   }
@@ -98,15 +107,22 @@ export default class Table extends React.Component<TableProps, TableState> {
   public componentDidMount() {
     this.scrollBarSize = getScrollBarSize();
     const { options } = this.props;
-    const { rowHeight } = options;
-    this.limit = Math.ceil(this.listWrapper.offsetHeight / rowHeight) + 5;
+    const { rowHeight, headerHeight, data } = options;
+    const myHeaderHeight = headerHeight || rowHeight;
+    const listVisibleHeight = this.listWrapper.clientHeight - myHeaderHeight;
+    this.limit = Math.floor(listVisibleHeight / rowHeight) + 5;
+    if (data.length > listVisibleHeight / rowHeight) {
+      this.setState({ isShowScrollbarY: true });
+    }
     window.addEventListener("resize", this.handleWindowResize);
   }
 
   public componentWillReceiveProps(nextProps: TableProps) {
     this.delayDoAction(this.timeout, () => {
       const { options } = nextProps;
-      const { rowHeight, data } = options;
+      const { rowHeight, headerHeight, data } = options;
+      const myHeaderHeight = headerHeight || rowHeight;
+      const listVisibleHeight = this.listWrapper.clientHeight - myHeaderHeight;
       const nextColumnDefs: TableColumnDef<any>[] = options.columnDefs;
       const columnDefs: TableColumnDef<any>[] = this.state.columnDefs;
       for (let i = 0; i < nextColumnDefs.length; i++) {
@@ -120,8 +136,13 @@ export default class Table extends React.Component<TableProps, TableState> {
       }
 
       this.scrollHeight = data.length * rowHeight;
+      let isShowScrollbarY = false;
+      if (data.length > listVisibleHeight / rowHeight) {
+        isShowScrollbarY = true;
+      }
       this.setState({
         columnDefs: nextColumnDefs,
+        isShowScrollbarY,
       });
       this.updateData(nextProps);
     });
@@ -208,6 +229,9 @@ export default class Table extends React.Component<TableProps, TableState> {
       selected = item;
     }
     this.setState({ selected });
+    if (this.props.options.onSelected) {
+      this.props.options.onSelected(selected);
+    }
   };
 
   public handleResizerMouseDown = (
@@ -267,15 +291,13 @@ export default class Table extends React.Component<TableProps, TableState> {
     const { isColumnResizing, resizeMouseX, resizingColumn } = resizer;
     if (isColumnResizing && resizingColumn) {
       const resizeDiffX = e.clientX - resizeMouseX;
-      let isInResizedColumns = false;
       for (let i = 0; i < columnDefs.length; i++) {
         if (columnDefs[i].field === resizingColumn.field) {
           let width = (columnDefs[i].resizedWidth || 0) + resizeDiffX;
-          if (width < 20) {
-            width = 20;
+          if (width < (columnDefs[i].minWidth || 20)) {
+            width = columnDefs[i].minWidth || 20;
           }
           columnDefs[i].resizedWidth = width;
-          isInResizedColumns = true;
           break;
         }
       }
@@ -288,30 +310,47 @@ export default class Table extends React.Component<TableProps, TableState> {
 
   private handleWindowResize = () => {
     this.delayDoAction(this.timeout, () => {
+      const { options } = this.props;
+      const { rowHeight, headerHeight, data } = options;
+      const myHeaderHeight = headerHeight || rowHeight;
+      const listVisibleHeight = this.listWrapper.clientHeight - myHeaderHeight;
+      let isShowScrollbarY = false;
+      if (data.length > listVisibleHeight / rowHeight) {
+        isShowScrollbarY = true;
+      }
+      this.setState({ isShowScrollbarY });
       this.updateData();
     });
   };
 
   private updateData = (nextProps?: TableProps) => {
     const { options } = nextProps || this.props;
-    const { rowHeight, data } = options;
+    const { rowHeight, headerHeight, data } = options;
+    const myHeaderHeight = headerHeight || rowHeight;
     const scrollTop = this.scrollBarWrapper.scrollTop;
-    // list visible size
-    const listVisibleSize = this.listWrapper.clientHeight / rowHeight;
+    // list visible count
+    const listVisibleHeight = this.listWrapper.clientHeight - myHeaderHeight;
     // list index offset 0.9 => 0  1.9 => 1
     let index = Math.floor(scrollTop / rowHeight);
     // update offsetY of first item of list when scroll to bottom
     const dataLength = data.length;
-    if (dataLength - index < listVisibleSize) {
+    if (dataLength - index > listVisibleHeight / rowHeight) {
       // -1: header has 1px border-bottom
-      this.listOffsetY =
-        ((this.listWrapper.clientHeight - 1) % rowHeight) - rowHeight;
+      this.listOffsetY = (listVisibleHeight % rowHeight) - rowHeight;
     } else {
       this.listOffsetY = 0;
     }
+    console.log(dataLength, index, listVisibleHeight / rowHeight);
     // reset index if has whitespace when scroll to bottom
-    if (dataLength - index + 1 < listVisibleSize) {
+    if (dataLength - index < listVisibleHeight / rowHeight - 1) {
       index = index - 1;
+    }
+    if (index < 0) {
+      index = 0;
+      this.listOffsetY = 0;
+    }
+    if (scrollTop === 0) {
+      this.listOffsetY = 0;
     }
 
     this.setState({
