@@ -98,7 +98,7 @@ const Column = styled.div`
 `;
 
 const Cell = styled.div`
-  /* padding: 0 8px; */
+  padding: 0 8px;
 `;
 
 const HeaderCell = Cell.extend`
@@ -112,7 +112,7 @@ const HeaderCell = Cell.extend`
 `;
 
 const HeaderCellContent = styled.div`
-  /* padding: 0 8px; */
+  padding: 0 8px;
 `;
 
 const SelectedRow = Row.extend`
@@ -123,7 +123,6 @@ const SelectedRow = Row.extend`
 `;
 
 const CellText = styled.div`
-  width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -253,6 +252,8 @@ const getView = (component: Table): JSX.Element => {
                   className="rc-table-column"
                   key={columnIndex}
                   style={{
+                    minWidth,
+                    ...widthProp,
                     lineHeight: (headerHeight || rowHeight) + "px",
                   }}
                 >
@@ -305,13 +306,15 @@ const getView = (component: Table): JSX.Element => {
                 </Column>
               );
             })}
-            <Column style={{ flex: "1 0 auto" }}>
-              <HeaderCell
-                style={{
-                  borderRight: "none",
-                  height: headerHeight || rowHeight,
-                }}
-              />
+            <Column>
+              <div>
+                <HeaderCell
+                  style={{
+                    borderRight: "none",
+                    height: headerHeight || rowHeight,
+                  }}
+                />
+              </div>
             </Column>
           </Row>
 
@@ -340,7 +343,14 @@ const getView = (component: Table): JSX.Element => {
                       ? column.resizedWidth || column.width
                       : column.minWidth;
                   return (
-                    <Column className="rc-table-cloumn" key={columnIndex}>
+                    <Column
+                      className="rc-table-cloumn"
+                      key={columnIndex}
+                      style={{
+                        minWidth,
+                        ...widthProp,
+                      }}
+                    >
                       <div
                         style={{
                           minWidth,
