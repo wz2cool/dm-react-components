@@ -340,6 +340,7 @@ export default class Table extends React.Component<TableProps, TableState> {
     } else {
       this.listOffsetY = 0;
     }
+    console.log((listVisibleHeight % rowHeight) - rowHeight);
     console.log(dataLength, index, listVisibleHeight / rowHeight);
     // reset index if has whitespace when scroll to bottom
     if (dataLength - index < listVisibleHeight / rowHeight - 1) {

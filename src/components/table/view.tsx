@@ -105,7 +105,6 @@ const HeaderCell = Cell.extend`
   padding: 0;
   background: #eee;
   border-right: 1px solid #ccc;
-  /* border-bottom: 1px solid #ccc; */
   user-select: none;
   position: relative;
   display: flex;
@@ -306,18 +305,23 @@ const getView = (component: Table): JSX.Element => {
                 </Column>
               );
             })}
-            <Column>
+            <Column
+              style={{
+                lineHeight: (headerHeight || rowHeight) + "px",
+              }}
+            >
               <div>
                 <HeaderCell
                   style={{
                     borderRight: "none",
                     height: headerHeight || rowHeight,
                   }}
-                />
+                >
+                  <div style={{ width: "1px", overflow: "hidden" }}>&nbsp;</div>
+                </HeaderCell>
               </div>
             </Column>
           </Row>
-
           {data.map((item, itemIndex) => {
             const RowElement =
               selected && selected === item ? SelectedRow : Row;
@@ -325,9 +329,11 @@ const getView = (component: Table): JSX.Element => {
               <RowElement
                 className="rc-table-row rc-table-body"
                 key={itemIndex}
+                onClick={() => handleRowClick(item)}
                 style={{
-                  height: rowHeight,
-                  marginTop: itemIndex === 0 ? listOffsetY : 0,
+                  height: itemIndex === 0 ? rowHeight + listOffsetY : rowHeight,
+                  minHeight: itemIndex === 0 ? rowHeight + listOffsetY : rowHeight,
+                  maxHeight: itemIndex === 0 ? rowHeight + listOffsetY : rowHeight,
                 }}
               >
                 {columnDefs.map((column, columnIndex) => {
@@ -349,18 +355,21 @@ const getView = (component: Table): JSX.Element => {
                       style={{
                         minWidth,
                         ...widthProp,
+                        height: itemIndex === 0 ? rowHeight + listOffsetY : rowHeight,
+                        minHeight: itemIndex === 0 ? rowHeight + listOffsetY : rowHeight,
+                        maxHeight: itemIndex === 0 ? rowHeight + listOffsetY : rowHeight,
                       }}
                     >
                       <div
                         style={{
                           minWidth,
                           ...widthProp,
+                          height: itemIndex === 0 ? rowHeight + listOffsetY : rowHeight,
+                          minHeight: itemIndex === 0 ? rowHeight + listOffsetY : rowHeight,
+                          maxHeight: itemIndex === 0 ? rowHeight + listOffsetY : rowHeight,
                         }}
                       >
-                        <Cell
-                          className="rc-table-cell"
-                          onClick={() => handleRowClick(item)}
-                        >
+                        <Cell className="rc-table-cell">
                           {column.cellTemplate ? (
                             column.cellTemplate(item)
                           ) : (
@@ -373,6 +382,24 @@ const getView = (component: Table): JSX.Element => {
                     </Column>
                   );
                 })}
+                <Column
+                  style={{
+                    lineHeight: (headerHeight || rowHeight) + "px",
+                  }}
+                >
+                  <div>
+                    <Cell
+                      style={{
+                        padding: 0,
+                        height: headerHeight || rowHeight,
+                      }}
+                    >
+                      <div style={{ width: "1px", overflow: "hidden" }}>
+                        &nbsp;
+                      </div>
+                    </Cell>
+                  </div>
+                </Column>
               </RowElement>
             );
           })}
