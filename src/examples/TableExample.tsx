@@ -100,8 +100,9 @@ export default class TableExample extends React.Component<{}, State> {
   }
 
   private getData = async () => {
+    console.log("get data start");
     const users = await this.userMapper.getUser();
-    console.log("get user Success, ", users.length);
+    console.log("get user Success, ", users);
   };
 
   private fillLocalDb = async () => {

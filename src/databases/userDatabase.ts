@@ -21,7 +21,9 @@ export class UserDatabase extends Dexie {
       catchPhrase,
       companyName,
       words,
-      sentence`,
+      sentence,
+      [avatar],
+      [county]`,
     });
   }
 }

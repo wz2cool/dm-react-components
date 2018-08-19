@@ -17,9 +17,10 @@ export class UserMapper {
     let users: User[] = [];
     await this.db.transaction("r", this.db.users, async () => {
       users = await this.db.users
+        .orderBy("county").reverse()
         .filter(user => {
           if (user.companyName) {
-            return user.id > 3000;
+            return user.id > 3000 && user.companyName.startsWith("H");
           } else {
             return false;
           }
