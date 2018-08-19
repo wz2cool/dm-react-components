@@ -99,18 +99,22 @@ export default class TableExample extends React.Component<{}, State> {
     );
   }
 
-  private getData = () => {
-    const _that = this;
+  private getData = async () => {
+    const users = await this.userMapper.getUser();
+    console.log("get user Success, ", users.length);
   };
 
   private fillLocalDb = async () => {
     console.log("fillLocalDb start");
-    let users: User[] = [];
     for (let i = 1; i <= 50; i++) {
-      const response = await this.getUsers(i);
-      const users = response.data as User[];
+      console.log("begin get ==========", i);
+      console.log("get user start");
+      let response = await this.getUsers(i);
+      let users = response.data as User[];
+      console.log("get user end");
+      console.log("save user start");
       await this.userMapper.bulkPut(users);
-      console.log("get ", i);
+      console.log("save user end");
     }
     console.log("fillLocalDb end");
   };
