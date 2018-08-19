@@ -1,7 +1,158 @@
 import * as React from "react";
+import styled from "styled-components";
 import Table from "./table";
 import { Sort } from "./model/Sort";
 import { Direction } from "./model/direction";
+
+const FlexAutoDivider = styled.div`
+  flex: auto;
+`;
+
+const Wrap = styled.div`
+  width: 100%;
+  height: 100%;
+  display: flex;
+  background: #f8f8f8;
+  position: relative;
+`;
+
+const LoadingMask = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 999;
+`;
+
+const LoadingContent = styled.div``;
+
+const LoadingIcon = styled.div`
+  width: 100px;
+  height: 100px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 6px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
+const ResizerMask = styled.div`
+  cursor: col-resize;
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 999;
+`;
+
+const Resizer = styled.span`
+  width: 4px;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  right: -1px;
+  z-index: 999;
+`;
+
+const ResizerInner = styled.span`
+  width: 4px;
+  height: 100%;
+  cursor: col-resize;
+  display: block;
+`;
+
+const ScrollbarHeader = styled.div``;
+
+const ScrollbarFooter = styled.div``;
+
+const Scrollbar = styled.div`
+  height: 100%;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  ${ScrollbarHeader} {
+    background: #eee;
+    /* border-bottom: 1px solid #ccc; */
+    flex: none;
+  }
+  ${ScrollbarFooter} {
+    flex: none;
+  }
+`;
+
+const Row = styled.div`
+  display: table-row;
+  :hover {
+    background: #ccc;
+  }
+`;
+
+const Column = styled.div`
+  display: table-cell;
+`;
+
+const Cell = styled.div`
+  padding: 0 8px;
+`;
+
+const HeaderCell = Cell.extend`
+  padding: 0;
+  background: #eee;
+  border-right: 1px solid #ccc;
+  user-select: none;
+  position: relative;
+  display: flex;
+`;
+
+const HeaderCellContent = styled.div`
+  padding: 0 8px;
+`;
+
+const SelectedRow = Row.extend`
+  background: #d6ebdc;
+  :hover {
+    background: #d6ebdc;
+  }
+`;
+
+const CellText = styled.div`
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+const SortWrap = styled.span``;
+
+const SortIcon = styled.span`
+  width: 0;
+  height: 0;
+  vertical-align: middle;
+  display: inline-block;
+  border-color: #666;
+  border-style: solid;
+  border-width: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+`;
+
+const SortIconAsc = SortIcon.extend`
+  border-bottom-width: 4px;
+`;
+
+const SortIconDesc = SortIcon.extend`
+  border-top-width: 4px;
+`;
+
+const SortIndex = styled.span`
+  vertical-align: middle;
+  font-size: 12px;
+`;
 
 const DirectionComponent = ({
   field,
@@ -19,126 +170,265 @@ const DirectionComponent = ({
       break;
     }
   }
-  let iconClassName = "rc-table-sort-icon";
+  let SortIconElement = SortIcon;
   if (direction === Direction.ASC) {
-    iconClassName = iconClassName + " rc-table-sort-asc";
+    SortIconElement = SortIconAsc;
   } else if (direction === Direction.DESC) {
-    iconClassName = iconClassName + " rc-table-sort-desc";
+    SortIconElement = SortIconDesc;
   }
   return (
-    <span className="rc-table-sort">
-      <span className={iconClassName} />
-      <span className="rc-table-sort-index">{index ? index : ""}</span>
-    </span>
+    <SortWrap>
+      <SortIconElement />
+      <SortIndex>{index ? index : ""}</SortIndex>
+    </SortWrap>
   );
 };
 
 const getView = (component: Table): JSX.Element => {
   const that = component;
-  const { selected, sorts } = that.state;
-  const { options } = that.props;
-  const { rowHeight, columnDefs, data } = options;
-  const scrollHeight = data.length * rowHeight;
+  const {
+    listOffsetY,
+    scrollBarSize,
+    scrollHeight,
+    handleResizerMouseDown,
+    handleHeaderClick,
+    handleRowClick,
+    handleScroll,
+    handleWheel,
+    state,
+    props,
+  } = that;
+  const {
+    selected,
+    sorts,
+    columnDefs,
+    resizer,
+    data,
+    isShowScrollbarY,
+  } = state;
+  const { options, isLoading } = props;
+  const { rowHeight, headerHeight } = options;
+  const { isColumnResizing } = resizer;
   return (
-    <div className="rc-table">
+    <Wrap>
+      {isLoading ? (
+        <LoadingMask>
+          <LoadingContent>
+            <LoadingIcon>Loading...</LoadingIcon>
+          </LoadingContent>
+        </LoadingMask>
+      ) : null}
+      {isColumnResizing ? <ResizerMask /> : null}
       <div
         className="rc-table-list"
-        ref={node => (that.listWrapper = node)}
-        onWheel={e => that.handleWheel(e)}
-      >
-        {columnDefs.map((column, columnIndex) => {
-          return (
-            <div
-              className="rc-table-column"
-              key={columnIndex}
-              style={{
-                minWidth: column.minWidth ? column.minWidth : "auto",
-                lineHeight: rowHeight + "px",
-                flex: column.width ? "0 0 " + column.width + "px" : "1 1 100%",
-              }}
-            >
-              <div
-                className="rc-table-cell rc-table-cell-header"
-                style={{
-                  height: rowHeight,
-                  cursor: column.enableSorting ? "pointer" : "auto",
-                }}
-                onClick={e => that.handleHeaderClick(e, column)}
-              >
-                {column.headerTemplate ? (
-                  column.headerTemplate
-                ) : (
-                  <span className="rc-table-cell-text">
-                    {column.displayName || column.field.toString()}
-                  </span>
-                )}
-                {column.enableSorting ? (
-                  <DirectionComponent
-                    field={column.field.toString()}
-                    sorts={sorts}
-                  />
-                ) : null}
-              </div>
-              {that.state.data.map((item, itemIndex) => {
-                const title = column.title
-                  ? column.title(item)
-                  : item[column.field.toString()];
-                return (
-                  <div
-                    className={
-                      "rc-table-cell rc-table-cell-content" +
-                      (selected && selected.id === item.id
-                        ? " rc-table-cell-selected"
-                        : "")
-                    }
-                    key={itemIndex}
-                    onClick={() => that.handleRowClick(item)}
-                    style={
-                      itemIndex === 0
-                        ? {
-                            height: rowHeight,
-                            marginTop: that.listOffsetY,
-                          }
-                        : { height: rowHeight }
-                    }
-                  >
-                    {column.cellTemplate ? (
-                      column.cellTemplate(item)
-                    ) : (
-                      <div className="rc-table-cell-text" title={title}>
-                        {item[column.field]}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          );
-        })}
-      </div>
-      <div
-        className="rc-table-scrollbar"
+        ref={(node: any) => (that.listWrapper = node)}
+        onWheel={e => handleWheel(e)}
         style={{
-          width: that.scrollBarSize,
+          height: "100%",
+          flex: "auto",
+          overflowX: "auto",
+          overflowY: "hidden",
         }}
       >
         <div
+          style={{
+            width: "100%",
+            display: "table",
+          }}
+        >
+          <Row className="rc-table-row rc-table-header">
+            {columnDefs.map((column, columnIndex) => {
+              const widthProp =
+                column.resizedWidth || column.width
+                  ? { width: column.resizedWidth || column.width }
+                  : {};
+              const minWidth =
+                column.resizedWidth || column.width
+                  ? column.resizedWidth || column.width
+                  : column.minWidth;
+              return (
+                <Column
+                  className="rc-table-column"
+                  key={columnIndex}
+                  style={{
+                    minWidth,
+                    ...widthProp,
+                    lineHeight: (headerHeight || rowHeight) + "px",
+                  }}
+                >
+                  <div
+                    style={{
+                      minWidth,
+                      ...widthProp,
+                    }}
+                  >
+                    <HeaderCell
+                      className="rc-table-cell"
+                      style={{
+                        height: headerHeight || rowHeight,
+                        cursor: column.enableSorting ? "pointer" : "auto",
+                      }}
+                      onClick={(e: any) => handleHeaderClick(e, column)}
+                    >
+                      <HeaderCellContent className="rc-table-cell-content">
+                        {column.headerTemplate ? (
+                          column.headerTemplate
+                        ) : (
+                          <CellText>
+                            {column.displayName || column.field.toString()}
+                          </CellText>
+                        )}
+                      </HeaderCellContent>
+                      {column.enableSorting ? (
+                        <DirectionComponent
+                          field={column.field.toString()}
+                          sorts={sorts}
+                        />
+                      ) : null}
+                      <FlexAutoDivider />
+                      {true ? (
+                        <Resizer>
+                          <ResizerInner
+                            onMouseDown={(e: any) =>
+                              handleResizerMouseDown(
+                                e,
+                                column,
+                                e.currentTarget.parentElement.parentElement
+                                  .offsetWidth,
+                              )
+                            }
+                          />
+                        </Resizer>
+                      ) : null}
+                    </HeaderCell>
+                  </div>
+                </Column>
+              );
+            })}
+            <Column
+              style={{
+                lineHeight: (headerHeight || rowHeight) + "px",
+              }}
+            >
+              <div>
+                <HeaderCell
+                  style={{
+                    borderRight: "none",
+                    height: headerHeight || rowHeight,
+                  }}
+                >
+                  <div style={{ width: "1px", overflow: "hidden" }}>&nbsp;</div>
+                </HeaderCell>
+              </div>
+            </Column>
+          </Row>
+          {data.map((item, itemIndex) => {
+            const RowElement =
+              selected && selected === item ? SelectedRow : Row;
+            return (
+              <RowElement
+                className="rc-table-row rc-table-body"
+                key={itemIndex}
+                onClick={() => handleRowClick(item)}
+                style={{
+                  height: itemIndex === 0 ? rowHeight + listOffsetY : rowHeight,
+                  minHeight: itemIndex === 0 ? rowHeight + listOffsetY : rowHeight,
+                  maxHeight: itemIndex === 0 ? rowHeight + listOffsetY : rowHeight,
+                }}
+              >
+                {columnDefs.map((column, columnIndex) => {
+                  const title = column.title
+                    ? column.title(item)
+                    : item[column.field.toString()];
+                  const widthProp =
+                    column.resizedWidth || column.width
+                      ? { width: column.resizedWidth || column.width }
+                      : {};
+                  const minWidth =
+                    column.resizedWidth || column.width
+                      ? column.resizedWidth || column.width
+                      : column.minWidth;
+                  return (
+                    <Column
+                      className="rc-table-cloumn"
+                      key={columnIndex}
+                      style={{
+                        minWidth,
+                        ...widthProp,
+                        height: itemIndex === 0 ? rowHeight + listOffsetY : rowHeight,
+                        minHeight: itemIndex === 0 ? rowHeight + listOffsetY : rowHeight,
+                        maxHeight: itemIndex === 0 ? rowHeight + listOffsetY : rowHeight,
+                      }}
+                    >
+                      <div
+                        style={{
+                          minWidth,
+                          ...widthProp,
+                          height: itemIndex === 0 ? rowHeight + listOffsetY : rowHeight,
+                          minHeight: itemIndex === 0 ? rowHeight + listOffsetY : rowHeight,
+                          maxHeight: itemIndex === 0 ? rowHeight + listOffsetY : rowHeight,
+                        }}
+                      >
+                        <Cell className="rc-table-cell">
+                          {column.cellTemplate ? (
+                            column.cellTemplate(item)
+                          ) : (
+                            <CellText title={title}>
+                              {item[column.field]}
+                            </CellText>
+                          )}
+                        </Cell>
+                      </div>
+                    </Column>
+                  );
+                })}
+                <Column
+                  style={{
+                    lineHeight: (headerHeight || rowHeight) + "px",
+                  }}
+                >
+                  <div>
+                    <Cell
+                      style={{
+                        padding: 0,
+                        height: headerHeight || rowHeight,
+                      }}
+                    >
+                      <div style={{ width: "1px", overflow: "hidden" }}>
+                        &nbsp;
+                      </div>
+                    </Cell>
+                  </div>
+                </Column>
+              </RowElement>
+            );
+          })}
+        </div>
+      </div>
+      <Scrollbar
+        className="rc-table-scrollbar"
+        style={{
+          width: isShowScrollbarY ? scrollBarSize : 0,
+        }}
+      >
+        <ScrollbarHeader
           className="rc-table-scrollbar-header"
-          style={{ height: rowHeight }}
+          style={{ height: headerHeight || rowHeight }}
         />
         <div
+          className="rc-table-scrollbar-body"
           ref={node => (that.scrollBarWrapper = node)}
-          onScroll={e => that.handleScroll()}
+          onScroll={e => handleScroll()}
           style={{ flex: "auto", overflowX: "hidden", overflowY: "auto" }}
         >
           <div style={{ width: "1px", height: scrollHeight }} />
         </div>
-        <div
+        <ScrollbarFooter
           className="rc-table-scrollbar-footer"
-          style={{ height: that.scrollBarSize }}
+          style={{ height: scrollBarSize }}
         />
-      </div>
-    </div>
+      </Scrollbar>
+    </Wrap>
   );
 };
 

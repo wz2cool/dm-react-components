@@ -8,14 +8,15 @@
     "build": "webpack",
     "dev": "webpack-dev-server",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "prepublish": "tsc"
+    "prepublish": "tsc -d"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "dexie": "^2.0.4",
     "react": "^16.2.0",
-    "react-dom": "^16.2.0"
+    "react-dom": "^16.2.0",
+    "styled-components": "^3.3.3"
   },
   "devDependencies": {
     "@types/axios": "~0.14.0",

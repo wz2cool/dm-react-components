@@ -18,7 +18,8 @@ declare const openDatabase: (
 
 const db = openDatabase("dmdb", "1.0", "Test DB", 100 * 1024 * 1024);
 
-interface State {
+export interface State {
+  isTableLoading: boolean;
   data: User[];
 }
 
@@ -27,6 +28,7 @@ export default class TableExample extends React.Component<{}, State> {
     super(props);
 
     this.state = {
+      isTableLoading: false,
       data: [],
     };
   }
@@ -69,7 +71,7 @@ export default class TableExample extends React.Component<{}, State> {
         {
           field: "companyName",
           displayName: "公司",
-          minWidth: 300,
+          minWidth: 100,
         },
         {
           field: "email",
@@ -97,6 +99,7 @@ export default class TableExample extends React.Component<{}, State> {
             <Table
               options={tableOptions}
               sortChanged={this.handleSortChanged}
+              isLoading={this.state.isTableLoading}
             />
           </div>
         </div>
@@ -182,19 +185,23 @@ export default class TableExample extends React.Component<{}, State> {
   }
 
   private handleSortChanged = (sorts: Sort[]) => {
-    const fields: string[] = [];
-    const directions: string[] = [];
-    if (sorts.length === 0) {
-      fields.push("id");
-      directions.push("asc");
-    } else {
-      for (const sort of sorts) {
-        fields.push(sort.field!);
-        directions.push(Direction[sort.direction].toLocaleLowerCase());
-      }
-    }
+    this.setState({ isTableLoading: true }, () => {
+      setTimeout(() => {
+        const fields: string[] = [];
+        const directions: string[] = [];
+        if (sorts.length === 0) {
+          fields.push("id");
+          directions.push("asc");
+        } else {
+          for (const sort of sorts) {
+            fields.push(sort.field!);
+            directions.push(Direction[sort.direction].toLocaleLowerCase());
+          }
+        }
 
-    const newData = _.orderBy(this.state.data, fields, directions);
-    this.setState({ data: newData });
+        const newData = _.orderBy(this.state.data, fields, directions);
+        this.setState({ data: newData, isTableLoading: false });
+      }, 1000);
+    });
   };
 }
