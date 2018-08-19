@@ -7,16 +7,7 @@ import { Sort } from "../components/table/model/Sort";
 
 import "./style.css";
 import { Direction } from "../components/table/model/direction";
-
-declare const openDatabase: (
-  db: string,
-  version: string,
-  desc: string,
-  size: number,
-  cb?: any,
-) => any;
-
-const db = openDatabase("dmdb", "1.0", "Test DB", 100 * 1024 * 1024);
+import { UserMapper } from "../mappers/userMapper";
 
 export interface State {
   isTableLoading: boolean;
@@ -24,9 +15,10 @@ export interface State {
 }
 
 export default class TableExample extends React.Component<{}, State> {
+  private userMapper: UserMapper;
   constructor(props: {}) {
     super(props);
-
+    this.userMapper = new UserMapper();
     this.state = {
       isTableLoading: false,
       data: [],
@@ -109,74 +101,18 @@ export default class TableExample extends React.Component<{}, State> {
 
   private getData = () => {
     const _that = this;
-    db.transaction((tx: any) => {
-      tx.executeSql(
-        "SELECT * FROM faker limit 50000",
-        [],
-        (tx: any, results: any) => {
-          const data = _.values(results.rows);
-          _that.setState({
-            data,
-          });
-        },
-      );
-    });
   };
 
-  private fillLocalDb = () => {
+  private fillLocalDb = async () => {
     console.log("fillLocalDb start");
     let users: User[] = [];
     for (let i = 1; i <= 50; i++) {
-      this.getUsers(i).then((response: any) => {
-        console.log("get data: ", i);
-        const getUsers = response.data;
-        users = users.concat(getUsers);
-        db.transaction((tx: any) => {
-          tx.executeSql("Drop table faker");
-          tx.executeSql(
-            "CREATE TABLE IF NOT EXISTS faker (id UNIQUE, avatar, county, email, title, firstName, lastName, street, zipCode, date, bs, catchPhrase, companyName, words, sentence)",
-          );
-
-          for (let i = 0; i < users.length; i++) {
-            const item = users[i];
-            tx.executeSql(
-              "INSERT INTO faker (id, avatar, county, email, title, firstName, lastName, street, zipCode, date, bs, catchPhrase, companyName, words, sentence) VALUES (" +
-                i +
-                ', "' +
-                item.avatar +
-                '", "' +
-                item.county +
-                '", "' +
-                item.email +
-                '", "' +
-                item.title +
-                '", "' +
-                item.firstName +
-                '", "' +
-                item.lastName +
-                '", "' +
-                item.street +
-                '", "' +
-                item.zipCode +
-                '", "' +
-                item.date +
-                '", "' +
-                item.bs +
-                '", "' +
-                item.catchPhrase +
-                '", "' +
-                item.companyName +
-                '", "' +
-                item.words +
-                '", "' +
-                item.sentence +
-                '")',
-            );
-          }
-        });
-      });
-      console.log("fillLocalDb end");
+      const response = await this.getUsers(i);
+      const users = response.data as User[];
+      await this.userMapper.bulkPut(users);
+      console.log("get ", i);
     }
+    console.log("fillLocalDb end");
   };
 
   private getUsers(part: number): AxiosPromise<User[]> {

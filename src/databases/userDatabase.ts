@@ -1,4 +1,4 @@
-import { Dexie } from "Dexie";
+import Dexie from "Dexie";
 import { User } from "../examples/model/user";
 export class UserDatabase extends Dexie {
   public users!: Dexie.Table<User, number>;

@@ -1,5 +1,5 @@
-export class User {
-  id?: number;
+export interface User {
+  id: number;
   avatar?: string;
   county?: string;
   email?: string;
