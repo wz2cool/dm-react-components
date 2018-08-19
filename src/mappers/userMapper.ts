@@ -1,5 +1,6 @@
 import { UserDatabase } from "../databases/userDatabase";
 import { User } from "../examples/model/user";
+import { FilterHelper, DynamicQuery } from "ts-dynamic-query";
 
 export class UserMapper {
   private readonly db: UserDatabase;
@@ -13,14 +14,18 @@ export class UserMapper {
     });
   }
 
-  public async getUser(): Promise<User[]> {
+  public async getUser(dynamicQuery: DynamicQuery<User>): Promise<User[]> {
     let users: User[] = [];
     await this.db.transaction("r", this.db.users, async () => {
       users = await this.db.users
-        .orderBy("county").reverse()
+        .orderBy("county")
+        .reverse()
         .filter(user => {
           if (user.companyName) {
-            return user.id > 3000 && user.companyName.startsWith("H");
+            return FilterHelper.predicateByFilters<User>(
+              user,
+              dynamicQuery.filters,
+            );
           } else {
             return false;
           }

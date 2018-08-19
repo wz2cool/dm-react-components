@@ -8,6 +8,7 @@ import { Sort } from "../components/table/model/Sort";
 import "./style.css";
 import { Direction } from "../components/table/model/direction";
 import { UserMapper } from "../mappers/userMapper";
+import { DynamicQuery, FilterOperator } from "ts-dynamic-query";
 
 export interface State {
   isTableLoading: boolean;
@@ -101,8 +102,21 @@ export default class TableExample extends React.Component<{}, State> {
 
   private getData = async () => {
     console.log("get data start");
-    const users = await this.userMapper.getUser();
-    console.log("get user Success, ", users);
+    const query = new DynamicQuery<User>()
+      .addFilter({
+        propertyPath: "id",
+        operator: FilterOperator.GREATER_THAN,
+        value: 10000,
+      })
+      .addFilter({
+        propertyPath: "companyName",
+        operator: FilterOperator.START_WITH,
+        value: "a",
+        ignoreCase: true,
+      });
+
+    const users = await this.userMapper.getUser(query);
+    console.log("get user Success, ", users.length);
   };
 
   private fillLocalDb = async () => {
